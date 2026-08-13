@@ -171,17 +171,18 @@ const DishesView = {
       ? `<img src="${dish.photo}" alt="${App.escapeHtml(dish.name)}">`
       : '🍳';
 
+    // 可内联编辑的区域 - 点击后变为编辑模式
     const linkHtml = dish.douyinUrl
-      ? `<p><a href="${App.escapeHtml(dish.douyinUrl)}" class="detail-link" target="_blank">📺 打开抖音视频</a></p>`
-      : '<p class="text-light" style="color:#999">暂无视频链接</p>';
+      ? `<p class="detail-editable" data-field="douyinUrl" title="点击编辑">📺 <a href="${App.escapeHtml(dish.douyinUrl)}" class="detail-link" target="_blank">${App.escapeHtml(dish.douyinUrl)}</a> <span class="edit-hint">✎</span></p>`
+      : `<p class="detail-editable" data-field="douyinUrl" title="点击添加">➕ 添加视频链接 <span class="edit-hint">✎</span></p>`;
 
     const ingredientsHtml = dish.ingredients
-      ? `<p class="detail-text">${App.escapeHtml(dish.ingredients)}</p>`
-      : '<p style="color:#999">暂无食材信息</p>';
+      ? `<p class="detail-editable detail-text" data-field="ingredients" title="点击编辑">${App.escapeHtml(dish.ingredients)} <span class="edit-hint">✎</span></p>`
+      : `<p class="detail-editable" data-field="ingredients" title="点击添加">➕ 点击添加食材信息 <span class="edit-hint">✎</span></p>`;
 
     const methodHtml = dish.method
-      ? `<p class="detail-text">${App.escapeHtml(dish.method)}</p>`
-      : '<p style="color:#999">暂无做法，点击编辑添加</p>';
+      ? `<p class="detail-editable detail-text" data-field="method" title="点击编辑">${App.escapeHtml(dish.method)} <span class="edit-hint">✎</span></p>`
+      : `<p class="detail-editable" data-field="method" title="点击添加">➕ 点击添加做法 <span class="edit-hint">✎</span></p>`;
 
     const tagsHtml = (dish.tags && dish.tags.length > 0)
       ? dish.tags.map(tag => `<span class="detail-tag tag-${tag}">${tag}</span>`).join('')
@@ -252,7 +253,7 @@ const DishesView = {
         <button class="detail-photo-upload-btn" id="upload-photo-btn">📷 ${dish.photo ? '换张照片' : '上传做菜照片'}</button>
         <input type="file" id="detail-photo-input" accept="image/*" class="hidden" capture="environment">
       </div>
-      <div class="detail-title">${App.escapeHtml(dish.name)}</div>
+      <div class="detail-title detail-editable" data-field="name" title="点击编辑菜名">${App.escapeHtml(dish.name)} <span class="edit-hint">✎</span></div>
       <div class="detail-tags">
         <span class="detail-tag category">${App.escapeHtml(dish.category)}</span>
         ${subCategoryHtml}
@@ -302,6 +303,16 @@ const DishesView = {
       this.showDeleteConfirm(dish.id, dish.name);
     });
 
+    // 内联编辑：点击可编辑区域变为编辑模式
+    container.querySelectorAll('.detail-editable').forEach(el => {
+      el.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const field = el.dataset.field;
+        const currentValue = dish[field] || '';
+        await this.enterInlineEdit(container, dish.id, field, currentValue, el);
+      });
+    });
+
     // 上传做菜照片
     const uploadBtn = document.getElementById('upload-photo-btn');
     const photoInput = document.getElementById('detail-photo-input');
@@ -346,6 +357,108 @@ const DishesView = {
         App.showToast('💡 已加入周日愿望清单');
       }
       await this.renderDetail(container, id);
+    });
+  },
+
+  // 内联编辑：进入编辑模式
+  async enterInlineEdit(container, dishId, field, currentValue, element) {
+    // 如果已经在编辑状态，不重复进入
+    if (element.classList.contains('editing')) return;
+
+    const isLongText = field === 'ingredients' || field === 'method';
+    const fieldLabels = { name: '菜名', ingredients: '食材', method: '做法', douyinUrl: '抖音视频链接' };
+    const label = fieldLabels[field] || field;
+
+    // 创建编辑框
+    element.classList.add('editing');
+    const originalHtml = element.innerHTML;
+    element.innerHTML = `
+      <div class="inline-edit-box">
+        <div class="inline-edit-label">编辑${label}</div>
+        ${isLongText 
+          ? `<textarea class="inline-edit-textarea" rows="6">${App.escapeHtml(currentValue)}</textarea>`
+          : `<input type="text" class="inline-edit-input" value="${App.escapeHtml(currentValue)}">`
+        }
+        <div class="inline-edit-actions">
+          <button class="btn btn-secondary btn-sm inline-cancel-btn">取消</button>
+          <button class="btn btn-primary btn-sm inline-save-btn">保存</button>
+        </div>
+      </div>
+    `;
+
+    const textarea = element.querySelector('.inline-edit-textarea, .inline-edit-input');
+    const cancelBtn = element.querySelector('.inline-cancel-btn');
+    const saveBtn = element.querySelector('.inline-save-btn');
+
+    // 聚焦
+    if (textarea) {
+      textarea.focus();
+      if (isLongText) textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+    }
+
+    // 取消
+    const cancelEdit = () => {
+      element.classList.remove('editing');
+      element.innerHTML = originalHtml;
+      this.rebindEditableEvents(container, dishId);
+    };
+
+    cancelBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      cancelEdit();
+    });
+
+    // 保存
+    const saveEdit = async () => {
+      const newValue = textarea.value.trim();
+      if (field === 'name' && !newValue) {
+        App.showToast('菜名不能为空');
+        textarea.focus();
+        return;
+      }
+      try {
+        await updateDish(dishId, { [field]: newValue });
+        App.showToast('✅ 已保存');
+        // 重新渲染详情
+        await this.renderDetail(container, dishId);
+      } catch (err) {
+        App.showToast('保存失败');
+        cancelEdit();
+      }
+    };
+
+    saveBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      saveEdit();
+    });
+
+    // 快捷键：Enter保存（textarea用Ctrl+Enter），Esc取消
+    textarea.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        cancelEdit();
+      } else if (e.key === 'Enter' && !isLongText) {
+        e.preventDefault();
+        saveEdit();
+      } else if (e.key === 'Enter' && e.ctrlKey && isLongText) {
+        e.preventDefault();
+        saveEdit();
+      }
+    });
+  },
+
+  // 重新绑定可编辑事件
+  rebindEditableEvents(container, dishId) {
+    container.querySelectorAll('.detail-editable').forEach(el => {
+      el.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        if (el.classList.contains('editing')) return;
+        const field = el.dataset.field;
+        const dish = await getDishById(dishId);
+        if (!dish) return;
+        const currentValue = dish[field] || '';
+        await this.enterInlineEdit(container, dishId, field, currentValue, el);
+      });
     });
   },
 
