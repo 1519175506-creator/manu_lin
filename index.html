@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#FFCB05">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="小lin食铺">
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="css/style.css">
+  <title>小lin食铺 ⚡</title>
+</head>
+<body>
+  <div id="app">
+    <!-- 顶部标题栏 -->
+    <header class="app-header">
+      <h1 id="page-title">⚡ 小lin食铺</h1>
+    </header>
+
+    <!-- 主内容区 -->
+    <main id="view-container">
+      <!-- 视图由 JS 动态渲染 -->
+      <div class="loading">加载中... ⚡</div>
+    </main>
+
+    <!-- 底部导航 -->
+    <nav class="bottom-nav">
+      <a href="#/" class="nav-item active" data-tab="dishes">
+        <span class="nav-icon">🍳</span>
+        <span class="nav-label">菜谱</span>
+      </a>
+      <a href="#/plan" class="nav-item" data-tab="plan">
+        <span class="nav-icon">📋</span>
+        <span class="nav-label">周计划</span>
+      </a>
+      <a href="#/add" class="nav-item" data-tab="add">
+        <span class="nav-icon">➕</span>
+        <span class="nav-label">新增</span>
+      </a>
+      <a href="#/meals" class="nav-item" data-tab="meals">
+        <span class="nav-icon">🗒️</span>
+        <span class="nav-label">每日</span>
+      </a>
+      <a href="#/settings" class="nav-item" data-tab="settings">
+        <span class="nav-icon">🐾</span>
+        <span class="nav-label">我的</span>
+      </a>
+    </nav>
+  </div>
+
+  <!-- 模态层（用于笔记输入、菜品选择等） -->
+  <div id="modal-overlay" class="modal-overlay hidden">
+    <div id="modal-content" class="modal-content"></div>
+  </div>
+
+  <!-- Toast 提示 -->
+  <div id="toast" class="toast hidden"></div>
+
+  <!-- Dexie.js (IndexedDB 封装) -->
+  <script src="https://unpkg.com/dexie@3.2.7/dist/dexie.min.js"></script>
+  <!-- 应用脚本 -->
+  <script src="js/db.js?v=8"></script>
+  <script src="js/init-data.js?v=8"></script>
+  <script src="js/dishes.js?v=8"></script>
+  <script src="js/add-dish.js?v=8"></script>
+  <script src="js/plan.js?v=8"></script>
+  <script src="js/meals.js?v=8"></script>
+  <script src="js/settings.js?v=8"></script>
+  <script src="js/app.js?v=8"></script>
+</body>
+</html>

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><title>生成皮卡丘图标</title></head>
+<body>
+<h3>⚡ 生成小lin食铺 PWA 图标</h3>
+<canvas id="c" width="512" height="512" style="display:none"></canvas>
+<button onclick="gen(192)">下载 192x192</button>
+<button onclick="gen(512)">下载 512x512</button>
+<p>下载后放到 icons/ 目录，分别命名为 icon-192.png 和 icon-512.png</p>
+<script>
+function gen(size) {
+  const canvas = document.getElementById('c');
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d');
+  const s = size / 512;
+
+  // 背景
+  ctx.fillStyle = '#FFCB05';
+  ctx.beginPath();
+  ctx.roundRect(0, 0, size, size, 96 * s);
+  ctx.fill();
+
+  // 耳朵
+  ctx.fillStyle = '#3D3D3D';
+  ctx.beginPath();
+  ctx.moveTo(160*s, 80*s); ctx.lineTo(120*s, 180*s); ctx.lineTo(200*s, 140*s); ctx.closePath(); ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(352*s, 80*s); ctx.lineTo(392*s, 180*s); ctx.lineTo(312*s, 140*s); ctx.closePath(); ctx.fill();
+
+  // 脸
+  ctx.fillStyle = '#FFCB05';
+  ctx.beginPath();
+  ctx.arc(256*s, 280*s, 120*s, 0, Math.PI * 2);
+  ctx.fill();
+
+  // 脸颊
+  ctx.fillStyle = 'rgba(238,21,18,0.7)';
+  ctx.beginPath();
+  ctx.arc(170*s, 300*s, 28*s, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(342*s, 300*s, 28*s, 0, Math.PI * 2);
+  ctx.fill();
+
+  // 眼睛
+  ctx.fillStyle = '#3D3D3D';
+  ctx.beginPath();
+  ctx.arc(210*s, 260*s, 16*s, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(302*s, 260*s, 16*s, 0, Math.PI * 2);
+  ctx.fill();
+  // 眼睛高光
+  ctx.fillStyle = '#fff';
+  ctx.beginPath();
+  ctx.arc(214*s, 256*s, 5*s, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(306*s, 256*s, 5*s, 0, Math.PI * 2);
+  ctx.fill();
+
+  // 嘴
+  ctx.strokeStyle = '#3D3D3D';
+  ctx.lineWidth = 4 * s;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(240*s, 300*s);
+  ctx.quadraticCurveTo(256*s, 315*s, 272*s, 300*s);
+  ctx.stroke();
+
+  // 下载
+  canvas.toBlob(function(blob) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'icon-' + size + '.png';
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+}
+</script>
+</body>
+</html>
