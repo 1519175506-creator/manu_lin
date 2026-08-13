@@ -46,15 +46,16 @@ const App = {
     await migrateDishTags();
 
     // 迁移：导入抖音视频链接为菜品（占位，后续豆包批量补充）
-    const douyinAdded = await migrateDouyinVideos();
-    if (douyinAdded > 0) {
-      this.showToast(`已导入 ${douyinAdded} 个抖音视频菜品占位 ⚡`);
-    }
+    // 已禁用：改用 importFromFavoritesTxt() 从菜谱文件直接导入
+    // const douyinAdded = await migrateDouyinVideos();
+    // if (douyinAdded > 0) {
+    //   this.showToast(`已导入 ${douyinAdded} 个抖音视频菜品占位 ⚡`);
+    // }
 
     // 导入豆包整理好的收藏夹菜谱（删除占位菜品，从txt导入真实菜谱）
     const favResult = await importFromFavoritesTxt();
     if (favResult && !favResult.alreadyDone && !favResult.error) {
-      const msg = `✅ 已删除${favResult.deletedPlaceholders}个占位菜，导入${favResult.createdNew}道菜谱`;
+      const msg = `✅ 已清理${favResult.deletedBadDishes}道错误菜，导入${favResult.createdNew}道菜谱`;
       console.log('[收藏夹菜谱导入]', favResult);
       this.showToast(msg);
     }
@@ -73,41 +74,53 @@ const App = {
     // 更新底部导航高亮
     this.updateNav(hash);
 
-    // 路由匹配
-    if (hash === '/' || hash === '') {
-      this.setPageTitle('dishes');
-      await DishesView.renderList(container);
-    } else if (hash.startsWith('/dish/')) {
-      const id = hash.split('/')[2];
-      this.setPageTitle('detail');
-      await DishesView.renderDetail(container, id);
-    } else if (hash === '/add') {
-      this.setPageTitle('add');
-      AddDishView.render(container);
-    } else if (hash === '/edit/') {
-      // 不直接访问
-      window.location.hash = '/';
-    } else if (hash.startsWith('/edit/')) {
-      const id = hash.split('/')[2];
-      this.setPageTitle('edit');
-      AddDishView.render(container, id);
-    } else if (hash === '/plan') {
-      this.setPageTitle('plan');
-      await PlanView.render(container);
-    } else if (hash === '/meals') {
-      this.setPageTitle('meals');
-      await MealsView.render(container);
-    } else if (hash === '/settings') {
-      this.setPageTitle('settings');
-      await SettingsView.render(container);
-    } else if (hash === '/shopping') {
-      this.setPageTitle('shopping');
-      await ShoppingView.render(container);
-    } else if (hash === '/wishlist') {
-      this.setPageTitle('wishlist');
-      await WishlistView.render(container);
-    } else {
-      container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🐭</div><p>页面不存在</p></div>';
+    try {
+      // 路由匹配
+      if (hash === '/' || hash === '') {
+        this.setPageTitle('dishes');
+        await DishesView.renderList(container);
+      } else if (hash.startsWith('/dish/')) {
+        const id = hash.split('/')[2];
+        this.setPageTitle('detail');
+        await DishesView.renderDetail(container, id);
+      } else if (hash === '/add') {
+        this.setPageTitle('add');
+        AddDishView.render(container);
+      } else if (hash === '/edit/') {
+        // 不直接访问
+        window.location.hash = '/';
+      } else if (hash.startsWith('/edit/')) {
+        const id = hash.split('/')[2];
+        this.setPageTitle('edit');
+        AddDishView.render(container, id);
+      } else if (hash === '/plan') {
+        this.setPageTitle('plan');
+        await PlanView.render(container);
+      } else if (hash === '/meals') {
+        this.setPageTitle('meals');
+        await MealsView.render(container);
+      } else if (hash === '/settings') {
+        this.setPageTitle('settings');
+        await SettingsView.render(container);
+      } else if (hash === '/shopping') {
+        this.setPageTitle('shopping');
+        await ShoppingView.render(container);
+      } else if (hash === '/wishlist') {
+        this.setPageTitle('wishlist');
+        await WishlistView.render(container);
+      } else {
+        container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🐭</div><p>页面不存在</p></div>';
+      }
+    } catch (err) {
+      console.error('[路由错误]', err);
+      container.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-state-icon">😵</div>
+          <p>加载出错了</p>
+          <p style="font-size:12px;color:#999;margin-top:8px">${App.escapeHtml(String(err.message || err))}</p>
+          <a href="#/" class="btn btn-primary mt-16">返回菜谱</a>
+        </div>
+      `;
     }
   },
 

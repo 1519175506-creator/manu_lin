@@ -402,7 +402,12 @@ const ShoppingView = {
     let html = '';
     for (const cat of order) {
       if (!grouped[cat] || grouped[cat].length === 0) continue;
-      html += `<div class="shopping-category-title">${this.getCategoryIcon(cat)} ${cat}</div>`;
+      // 提取简短分类名给CSS匹配
+      let dataCat = cat;
+      if (cat === '肉蛋禽类') dataCat = '肉类';
+      else if (cat === '主食谷物') dataCat = '主食';
+      else if (cat === '调料类') dataCat = '调料';
+      html += `<div class="shopping-category-title" data-cat="${dataCat}">${this.getCategoryIcon(cat)} ${cat}</div>`;
       for (const item of grouped[cat]) {
         html += `
           <div class="shopping-item">

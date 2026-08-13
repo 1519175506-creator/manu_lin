@@ -86,8 +86,12 @@ const DishesView = {
         const subCatHtml = dish.subCategory
           ? `<span class="dish-tag-mini" style="background:#FFF3E0;color:#E65100">${this.getSubCategoryIcon(dish.subCategory)} ${App.escapeHtml(dish.subCategory)}</span>`
           : '';
-        html += `
-          <div class="dish-card" data-id="${dish.id}">
+        // 添加分类和细分类的CSS类，用于多样化配色
+          const catClass = dish.category ? `cat-${App.escapeHtml(dish.category)}` : '';
+          const subCatClass = dish.subCategory ? `cat-${App.escapeHtml(dish.subCategory)}` : '';
+          const cardClasses = [catClass, subCatClass].filter(Boolean).join(' ');
+          html += `
+          <div class="dish-card ${cardClasses}" data-id="${dish.id}">
             <div class="dish-photo">${photoHtml}</div>
             <div class="dish-info">
               <div class="dish-name">${App.escapeHtml(dish.name)}</div>

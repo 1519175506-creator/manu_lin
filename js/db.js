@@ -1,6 +1,6 @@
 // 数据库操作层 - 基于 Dexie.js (IndexedDB)
 const DB_NAME = 'RecipeAppDB';
-const DB_VERSION = 4;
+const DB_VERSION = 5;
 
 const db = new Dexie(DB_NAME);
 
@@ -35,6 +35,15 @@ db.version(4).stores({
   weeklyPlans: '++id, weekStart',
   shoppingCart: '++id, createdAt',
   wishlist: '++id, createdAt',
+  meta: 'key'
+});
+
+db.version(5).stores({
+  dishes: '++id, name, category, subCategory, cooked, createdAt, lastCookedAt',
+  meals: '++id, date, dishIds',
+  weeklyPlans: '++id, weekStart',
+  shoppingCart: '++id, createdAt',
+  wishlist: '++id, dishId, createdAt',
   meta: 'key'
 });
 

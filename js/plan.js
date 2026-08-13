@@ -62,7 +62,7 @@ const PlanView = {
         : '';
 
       slotsHtml += `
-        <div class="plan-slot" data-key="${slot.key}">
+        <div class="plan-slot" data-key="${slot.key}" data-day="${slot.day}">
           <div class="plan-slot-header">
             <span class="plan-slot-day">${slot.day} ${slot.meal}</span>
             ${(meatIds.length > 0 || vegId) ? `<button class="plan-slot-clear" data-key="${slot.key}" title="清除">×</button>` : ''}

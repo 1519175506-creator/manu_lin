@@ -21,6 +21,23 @@
   --danger: #f44336;
   --shadow: 0 2px 8px rgba(255,203,5,0.15);
   --radius: 16px;
+  /* 多套配色主题 */
+  --theme-cherry: #FF6B6B;
+  --theme-cherry-light: #FFF0F0;
+  --theme-mint: #4ECDC4;
+  --theme-mint-light: #E8FDFB;
+  --theme-lavender: #A78BFA;
+  --theme-lavender-light: #F3F0FF;
+  --theme-sky: #60A5FA;
+  --theme-sky-light: #EFF6FF;
+  --theme-peach: #FB923C;
+  --theme-peach-light: #FFF7ED;
+  --theme-rose: #F472B6;
+  --theme-rose-light: #FDF2F8;
+  --theme-emerald: #34D399;
+  --theme-emerald-light: #ECFDF5;
+  --theme-amber: #FBBF24;
+  --theme-amber-light: #FFFBEB;
 }
 
 html, body {
@@ -362,6 +379,76 @@ html, body {
   color: var(--primary-dark);
   white-space: nowrap;
 }
+
+/* 按分类/细分类给菜品卡片着色 - 多样化配色 */
+.dish-card.cat-荤菜 .dish-photo { background: linear-gradient(135deg, #FFE4E1, #FFB6C1); }
+.dish-card.cat-素菜 .dish-photo { background: linear-gradient(135deg, #E8F5E9, #A5D6A7); }
+.dish-card.cat-汤 .dish-photo { background: linear-gradient(135deg, #E3F2FD, #90CAF9); }
+.dish-card.cat-凉菜 .dish-photo { background: linear-gradient(135deg, #FFF3E0, #FFCC80); }
+.dish-card.cat-主食 .dish-photo { background: linear-gradient(135deg, #FFF8E1, #FFE082); }
+.dish-card.cat-海鲜 .dish-photo { background: linear-gradient(135deg, #E0F7FA, #80DEEA); }
+.dish-card.cat-猪肉 .dish-photo { background: linear-gradient(135deg, #FCE4EC, #F48FB1); }
+.dish-card.cat-鸡肉 .dish-photo { background: linear-gradient(135deg, #FFF8E1, #FFD54F); }
+.dish-card.cat-牛肉 .dish-photo { background: linear-gradient(135deg, #FFEBEE, #EF9A9A); }
+.dish-card.cat-空气炸锅 .dish-photo { background: linear-gradient(135deg, #F3E5F5, #CE93D8); }
+.dish-card.cat-一锅出 .dish-photo { background: linear-gradient(135deg, #E0F2F1, #80CBC4); }
+
+/* 统计卡片多样化配色 */
+.stats-grid .stat-card:nth-child(1) { background: linear-gradient(135deg, #FFF8E1, #FFECB3); }
+.stats-grid .stat-card:nth-child(2) { background: linear-gradient(135deg, #E8F5E9, #C8E6C9); }
+.stats-grid .stat-card:nth-child(3) { background: linear-gradient(135deg, #E3F2FD, #BBDEFB); }
+.stats-grid .stat-card:nth-child(4) { background: linear-gradient(135deg, #FCE4EC, #F8BBD0); }
+.stats-grid .stat-card:nth-child(5) { background: linear-gradient(135deg, #FFF3E0, #FFE0B2); }
+.stats-grid .stat-card:nth-child(6) { background: linear-gradient(135deg, #F3E5F5, #E1BEE7); }
+.stats-grid .stat-card:nth-child(7) { background: linear-gradient(135deg, #E0F2F1, #B2DFDB); }
+.stats-grid .stat-card:nth-child(8) { background: linear-gradient(135deg, #FFEBEE, #FFCDD2); }
+
+.stats-grid .stat-card:nth-child(1) .stat-number { color: #F57F17; }
+.stats-grid .stat-card:nth-child(2) .stat-number { color: #2E7D32; }
+.stats-grid .stat-card:nth-child(3) .stat-number { color: #1565C0; }
+.stats-grid .stat-card:nth-child(4) .stat-number { color: #C2185B; }
+.stats-grid .stat-card:nth-child(5) .stat-number { color: #E65100; }
+.stats-grid .stat-card:nth-child(6) .stat-number { color: #6A1B9A; }
+.stats-grid .stat-card:nth-child(7) .stat-number { color: #00695C; }
+.stats-grid .stat-card:nth-child(8) .stat-number { color: #C62828; }
+
+/* 每周计划卡片按星期不同颜色 */
+.plan-slot[data-day="周一"] .plan-slot-day { color: #C62828; }
+.plan-slot[data-day="周二"] .plan-slot-day { color: #EF6C00; }
+.plan-slot[data-day="周三"] .plan-slot-day { color: #6A1B9A; }
+.plan-slot[data-day="周四"] .plan-slot-day { color: #1565C0; }
+.plan-slot[data-day="周五"] .plan-slot-day { color: #00695C; }
+.plan-slot[data-day="周六"] .plan-slot-day { color: #F57F17; }
+.plan-slot[data-day="周日"] .plan-slot-day { color: #2E7D32; }
+
+.plan-slot[data-day="周一"]:has(.plan-slot-dish) { border-color: #EF5350; }
+.plan-slot[data-day="周二"]:has(.plan-slot-dish) { border-color: #FFA726; }
+.plan-slot[data-day="周三"]:has(.plan-slot-dish) { border-color: #AB47BC; }
+.plan-slot[data-day="周四"]:has(.plan-slot-dish) { border-color: #42A5F5; }
+.plan-slot[data-day="周五"]:has(.plan-slot-dish) { border-color: #26A69A; }
+.plan-slot[data-day="周六"]:has(.plan-slot-dish) { border-color: #FFCA28; }
+.plan-slot[data-day="周日"]:has(.plan-slot-dish) { border-color: #66BB6A; }
+
+/* 详情页营养卡片多样化配色 */
+.nutrition-grid .nutrition-item-block:nth-child(1) { background: linear-gradient(135deg, #FFF3E0, #FFE0B2); }
+.nutrition-grid .nutrition-item-block:nth-child(1) .nutrition-big-value { color: #E65100; }
+.nutrition-grid .nutrition-item-block:nth-child(2) { background: linear-gradient(135deg, #E3F2FD, #BBDEFB); }
+.nutrition-grid .nutrition-item-block:nth-child(2) .nutrition-big-value { color: #1565C0; }
+.nutrition-grid .nutrition-item-block:nth-child(3) { background: linear-gradient(135deg, #FCE4EC, #F8BBD0); }
+.nutrition-grid .nutrition-item-block:nth-child(3) .nutrition-big-value { color: #C2185B; }
+.nutrition-grid .nutrition-item-block:nth-child(4) { background: linear-gradient(135deg, #E8F5E9, #C8E6C9); }
+.nutrition-grid .nutrition-item-block:nth-child(4) .nutrition-big-value { color: #2E7D32; }
+
+/* 购物清单分类标题多样化颜色 */
+.shopping-category-title[data-cat="蔬菜类"] { border-left-color: #4CAF50; color: #2E7D32; }
+.shopping-category-title[data-cat="水果类"] { border-left-color: #FF5722; color: #D84315; }
+.shopping-category-title[data-cat="肉类"] { border-left-color: #F44336; color: #C62828; }
+.shopping-category-title[data-cat="海鲜水产"] { border-left-color: #2196F3; color: #1565C0; }
+.shopping-category-title[data-cat="豆制品"] { border-left-color: #FFC107; color: #FF8F00; }
+.shopping-category-title[data-cat="蛋奶类"] { border-left-color: #FF9800; color: #EF6C00; }
+.shopping-category-title[data-cat="调料"] { border-left-color: #9C27B0; color: #6A1B9A; }
+.shopping-category-title[data-cat="主食"] { border-left-color: #795548; color: #4E342E; }
+.shopping-category-title[data-cat="其他"] { border-left-color: #607D8B; color: #37474F; }
 
 .detail-section {
   margin-bottom: 24px;
