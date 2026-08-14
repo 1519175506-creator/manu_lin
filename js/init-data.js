@@ -47,14 +47,28 @@ async function loadRecipes() {
     let updatedCount = 0;
 
     for (const recipe of recipes) {
-      // 按菜名匹配已有菜品
-      const dish = allDishes.find(d => d.name === recipe.name);
-      if (dish && !dish.method) {
-        await updateDish(dish.id, {
-          ingredients: recipe.ingredients,
-          method: recipe.method
+      // 精确匹配
+      let dish = allDishes.find(d => d.name === recipe.name);
+      // 模糊匹配：菜名包含关系
+      if (!dish) {
+        dish = allDishes.find(d => {
+          const n1 = d.name.replace(/[\s（()）【】\[\]]/g, '');
+          const n2 = recipe.name.replace(/[\s（()）【】\[\]]/g, '');
+          return n1 === n2 || (n1.length >= 3 && n2.length >= 3 && (n1.includes(n2) || n2.includes(n1)));
         });
-        updatedCount++;
+      }
+
+      if (dish) {
+        // 如果菜品没有做法，或者现有做法比recipes.json短（信息更少），则更新
+        const shouldUpdate = !dish.method ||
+          (dish.method.length < (recipe.method || '').length && !dish.method.includes('第一步'));
+        if (shouldUpdate) {
+          await updateDish(dish.id, {
+            ingredients: recipe.ingredients,
+            method: recipe.method
+          });
+          updatedCount++;
+        }
       }
     }
     return updatedCount;
@@ -817,8 +831,19 @@ async function importFromFavoritesTxt() {
     const finalName = cleanName || recipe.name;
     const videoId = extractDouyinVideoId(recipe.videoUrl);
 
-    // 去重：同名就跳过（合集拆分的子菜共享videoId但菜名不同，所以不按videoId去重）
+    // 去重：同名则更新已有菜品的食材/做法（而不是跳过）
     if (existingNames.has(finalName)) {
+      // 找到已有菜品，补充缺失的食材和做法
+      const existing = currentDishes.find(d => d.name === finalName);
+      if (existing && (!existing.method || !existing.ingredients)) {
+        const updates = {};
+        if (!existing.method && finalMethod) updates.method = finalMethod;
+        if (!existing.ingredients && recipe.ingredients) updates.ingredients = recipe.ingredients;
+        if (!existing.douyinUrl && recipe.videoUrl) updates.douyinUrl = recipe.videoUrl;
+        if (Object.keys(updates).length > 0) {
+          await updateDish(existing.id, updates);
+        }
+      }
       skippedDup++;
       continue;
     }

@@ -237,6 +237,136 @@ async function migrateDishTags() {
   }
 }
 
+// 合并重复菜品：同名或菜名包含关系的合并为一道菜
+async function mergeDuplicateDishes() {
+  const DONE_KEY = 'merge_dup_dishes_v1';
+  if (localStorage.getItem(DONE_KEY)) return { alreadyDone: true };
+
+  const dishes = await getAllDishes();
+  const merged = new Set(); // 已被合并删除的id
+  let mergeCount = 0;
+
+  for (let i = 0; i < dishes.length; i++) {
+    if (merged.has(dishes[i].id)) continue;
+    const dishA = dishes[i];
+    const nameA = dishA.name.replace(/[\s（()）【】\[\]]/g, '');
+
+    for (let j = i + 1; j < dishes.length; j++) {
+      if (merged.has(dishes[j].id)) continue;
+      const dishB = dishes[j];
+      const nameB = dishB.name.replace(/[\s（()）【】\[\]]/g, '');
+
+      // 判断是否重复：完全相同，或一方包含另一方（且长度差异不大）
+      const isDup = nameA === nameB ||
+        (nameA.length >= 3 && nameB.length >= 3 &&
+         (nameA.includes(nameB) || nameB.includes(nameA)) &&
+         Math.abs(nameA.length - nameB.length) <= 6);
+
+      if (!isDup) continue;
+
+      // 选择保留哪个：优先保留有做法/食材/视频链接/已做过的
+      const scoreA = (dishA.method ? 2 : 0) + (dishA.ingredients ? 1 : 0) +
+                     (dishA.douyinUrl ? 1 : 0) + (dishA.cooked ? 1 : 0) +
+                     (dishA.photo ? 1 : 0) + (dishA.notes && dishA.notes.length > 0 ? 1 : 0);
+      const scoreB = (dishB.method ? 2 : 0) + (dishB.ingredients ? 1 : 0) +
+                     (dishB.douyinUrl ? 1 : 0) + (dishB.cooked ? 1 : 0) +
+                     (dishB.photo ? 1 : 0) + (dishB.notes && dishB.notes.length > 0 ? 1 : 0);
+
+      const keep = scoreA >= scoreB ? dishA : dishB;
+      const remove = scoreA >= scoreB ? dishB : dishA;
+
+      // 合并数据：用remove的数据补齐keep的空缺
+      const updates = {};
+      if (!keep.method && remove.method) updates.method = remove.method;
+      if (!keep.ingredients && remove.ingredients) updates.ingredients = remove.ingredients;
+      if (!keep.douyinUrl && remove.douyinUrl) updates.douyinUrl = remove.douyinUrl;
+      if (!keep.photo && remove.photo) updates.photo = remove.photo;
+      if (!keep.cooked && remove.cooked) updates.cooked = true;
+      if (!keep.subCategory && remove.subCategory) updates.subCategory = remove.subCategory;
+      if ((!keep.tags || keep.tags.length === 0) && remove.tags && remove.tags.length > 0) updates.tags = remove.tags;
+      if ((!keep.nutrition || keep.nutrition.calories === 0) && remove.nutrition && remove.nutrition.calories > 0) updates.nutrition = remove.nutrition;
+      // 合并笔记
+      if (remove.notes && remove.notes.length > 0) {
+        const existingNotes = keep.notes || [];
+        updates.notes = [...existingNotes, ...remove.notes];
+      }
+
+      if (Object.keys(updates).length > 0) {
+        await updateDish(keep.id, updates);
+      }
+
+      // 更新引用：购物清单、愿望清单、周计划、每日菜单
+      // 购物清单
+      const cart = await getShoppingCart();
+      if (cart.dishIds && cart.dishIds.includes(remove.id)) {
+        const newDishIds = cart.dishIds.map(id => id === remove.id ? keep.id : id);
+        const cartDishes = (await getAllDishes()).filter(d => newDishIds.includes(d.id));
+        const items = aggregateIngredients(cartDishes, 1);
+        await saveShoppingCart(newDishIds, items);
+      }
+
+      // 愿望清单
+      const wishlistItem = await db.wishlist.where('dishId').equals(remove.id).first();
+      if (wishlistItem) {
+        await db.wishlist.update(wishlistItem.id, { dishId: keep.id });
+      }
+
+      // 周计划
+      const plans = await getAllWeeklyPlans();
+      for (const plan of plans) {
+        let planChanged = false;
+        if (plan.slots) {
+          for (const slot of plan.slots) {
+            if (slot.meatDishIds) {
+              const newIds = slot.meatDishIds.map(id => id === remove.id ? keep.id : id);
+              if (JSON.stringify(newIds) !== JSON.stringify(slot.meatDishIds)) {
+                slot.meatDishIds = newIds; planChanged = true;
+              }
+            }
+            if (slot.vegDishId === remove.id) {
+              slot.vegDishId = keep.id; planChanged = true;
+            }
+          }
+        }
+        if (plan.sundayPlan) {
+          if (plan.sundayPlan.meatDishIds) {
+            const newIds = plan.sundayPlan.meatDishIds.map(id => id === remove.id ? keep.id : id);
+            if (JSON.stringify(newIds) !== JSON.stringify(plan.sundayPlan.meatDishIds)) {
+              plan.sundayPlan.meatDishIds = newIds; planChanged = true;
+            }
+          }
+          if (plan.sundayPlan.vegDishIds) {
+            const newIds = plan.sundayPlan.vegDishIds.map(id => id === remove.id ? keep.id : id);
+            if (JSON.stringify(newIds) !== JSON.stringify(plan.sundayPlan.vegDishIds)) {
+              plan.sundayPlan.vegDishIds = newIds; planChanged = true;
+            }
+          }
+        }
+        if (planChanged) {
+          await db.weeklyPlans.update(plan.id, { slots: plan.slots, sundayPlan: plan.sundayPlan });
+        }
+      }
+
+      // 每日菜单
+      const meals = await getAllMeals();
+      for (const meal of meals) {
+        if (meal.dishIds && meal.dishIds.includes(remove.id)) {
+          const newIds = meal.dishIds.map(id => id === remove.id ? keep.id : id);
+          await db.meals.update(meal.id, { dishIds: newIds });
+        }
+      }
+
+      // 删除重复菜品
+      await deleteDish(remove.id);
+      merged.add(remove.id);
+      mergeCount++;
+    }
+  }
+
+  localStorage.setItem(DONE_KEY, JSON.stringify({ doneAt: Date.now(), merged: mergeCount }));
+  return { merged: mergeCount };
+}
+
 // 从菜名中提取括号内容（支持()、（）、[]、【】）
 function extractParenthetical(name) {
   if (!name) return { cleanName: name || '', inParenthesis: '' };

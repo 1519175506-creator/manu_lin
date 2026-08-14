@@ -60,6 +60,19 @@ const App = {
       this.showToast(msg);
     }
 
+    // 从 recipes.json 补充初始菜单的食材和做法
+    const recipeCount = await loadRecipes();
+    if (recipeCount > 0) {
+      console.log(`[菜谱补充] 已补充 ${recipeCount} 道菜的做法`);
+    }
+
+    // 合并重复菜品
+    const mergeResult = await mergeDuplicateDishes();
+    if (mergeResult && !mergeResult.alreadyDone && mergeResult.merged > 0) {
+      console.log(`[重复合并] 已合并 ${mergeResult.merged} 道重复菜品`);
+      this.showToast(`已合并${mergeResult.merged}道重复菜品`);
+    }
+
     // 路由监听
     window.addEventListener('hashchange', () => this.router());
     this.router();
