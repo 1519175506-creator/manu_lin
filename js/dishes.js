@@ -7,13 +7,13 @@ const DishesView = {
   searchKeyword: '',
 
   // 细分类选项
-  subCategories: ['all', '猪肉', '鸡肉', '牛肉', '海鲜', '空气炸锅', '一锅出'],
+  subCategories: ['all', '低卡', '猪肉', '鸡肉', '牛肉', '海鲜', '一锅出'],
 
   // 渲染菜品列表
   async renderList(container) {
     const categories = ['all', 'cooked', 'uncooked', '荤菜', '素菜', '汤', '凉菜', '主食'];
     const labels = { all: '全部', cooked: '已做过 ✔', uncooked: '没做过', '荤菜': '荤菜', '素菜': '素菜', '汤': '汤', '凉菜': '凉菜', '主食': '主食' };
-    const subLabels = { all: '🏷️ 全部', '猪肉': '🐷 猪肉', '鸡肉': '🐔 鸡肉', '牛肉': '🐮 牛肉', '海鲜': '🦐 海鲜', '空气炸锅': '🌀 空气炸锅', '一锅出': '🍲 一锅出' };
+    const subLabels = { all: '🏷️ 全部', '低卡': '🥗 低卡', '猪肉': '🐷 猪肉', '鸡肉': '🐔 鸡肉', '牛肉': '🐮 牛肉', '海鲜': '🦐 海鲜', '一锅出': '🍲 一锅出' };
 
     container.innerHTML = `
       <input type="text" class="search-bar" id="search-input"
@@ -465,11 +465,11 @@ const DishesView = {
   // 细分类图标映射
   getSubCategoryIcon(subCat) {
     const map = {
+      '低卡': '🥗',
       '猪肉': '🐷',
       '鸡肉': '🐔',
       '牛肉': '🐮',
       '海鲜': '🦐',
-      '空气炸锅': '🌀',
       '一锅出': '🍲'
     };
     return map[subCat] || '🏷️';

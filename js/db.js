@@ -49,11 +49,11 @@ db.version(5).stores({
 
 // ===== 细分类常量 =====
 const SUB_CATEGORIES = {
+  低卡: ['低卡版辣椒炒肉', '辣炖冻豆腐', '蒜蓉西兰花', '蒜香口蘑鸡胸肉', '口蘑虾滑', '凉拌菠菜', '凉拌黄瓜', '凉拌粉丝', '凉拌平菇', '凉拌娃娃菜', '盐水毛豆', '番茄榨菜汤', '鲫鱼豆腐汤', '白切鸡', '白切肉', '香煎鸡排'],
   猪肉: ['红烧肉', '糖醋排骨', '回锅肉', '蒜泥白肉', '辣椒炒肉', '小炒肉', '叉烧', '菠萝炖猪排', '生炒排骨', '盐葱牛肉', '松板肉', '五花肉', '排骨'],
   鸡肉: ['宫保鸡丁', '可乐鸡翅', '白切鸡', '手撕鸡', '香煎鸡排', '盐葱鸡腿', '盐葱鸡', '干蒸豆豉鸡', '胡椒鸡', '江西辣鸡翅', '焦糖耗油鸡翅', '蒜香口蘑鸡胸肉', '鸡胸肉', '鸡翅'],
   牛肉: ['苦瓜牛肉', '酸辣土豆丝牛肉', '箩卜炖牛肉', '土豆炖牛腩', '牙签牛肉', '凉拌牛肉', '盐葱牛肉', '牛肉豆花饭', '牛肉'],
   海鲜: ['油焖大虾', '口蘑虾滑', '土豆丝虾球', '盐焗虾蛏子', '芥末虾球', '芥末罗氏虾炒花螺', '油蛤牛肉蒜头油', '油泼葱丝鱿鱼', '干锅鱿鱼', '虾蛏', '鱿鱼', '虾'],
-  空气炸锅: [],
   一锅出: ['三汁焖锅', '牛肉豆花饭', '土豆火鸡面', '土豆豆角炖排骨', '南瓜蛋挞', '焖饭', '一锅出']
 };
 
@@ -121,7 +121,7 @@ const DISH_TAG_MAP = {
   '蒜蓉西兰花': ['低脂', '高钾', '抗炎', '适合冷冻'],
 };
 
-// 迁移：为已有菜品添加标签
+// 迁移：为已有菜品添加标签、清理菜名、更新细分类
 async function migrateDishTags() {
   const dishes = await getAllDishes();
   for (const dish of dishes) {
@@ -135,32 +135,57 @@ async function migrateDishTags() {
       needsUpdate = true;
     }
 
-    // 细分类迁移
-    if (!dish.subCategory) {
-      const sub = guessSubCategory(dish.name);
-      if (sub) {
-        updates.subCategory = sub;
-        needsUpdate = true;
-      }
-    }
-
     // 营养数据迁移
     if (!dish.nutrition) {
       updates.nutrition = { calories: 0, carbs: 0, fat: 0, protein: 0 };
       needsUpdate = true;
     }
 
+    // 菜名清理：删除"空气炸锅"、"锡纸"前缀/中缀
+    let cleanedName = dish.name;
+    // 删除开头的"空气炸锅"
+    cleanedName = cleanedName.replace(/^空气炸锅/g, '');
+    // 删除菜名中间的"空气炸锅"（如"家庭版空气炸锅香辣烤鱼"→"家庭版香辣烤鱼"）
+    cleanedName = cleanedName.replace(/空气炸锅/g, '');
+    // 删除"锡纸"前缀和中间出现
+    cleanedName = cleanedName.replace(/^锡纸/g, '');
+    cleanedName = cleanedName.replace(/锡纸/g, '');
+    // 清理多余空格和可能残留的"版"字后缀
+    cleanedName = cleanedName.replace(/\s+/g, ' ').trim();
+    // 清理可能出现的连续括号或标点
+    cleanedName = cleanedName.replace(/^[\s、，,]+/, '').trim();
+    if (cleanedName !== dish.name) {
+      updates.name = cleanedName;
+      needsUpdate = true;
+    }
+
     // 菜名括号内容迁移到做法备注
-    const extractResult = extractParenthetical(dish.name);
+    const extractResult = extractParenthetical(updates.name || dish.name);
     if (extractResult.inParenthesis) {
-      // 更新菜名（去掉括号部分）
       updates.name = extractResult.cleanName;
-      // 将括号内容追加到做法开头
       const noteText = `【备注】${extractResult.inParenthesis}`;
-      const newMethod = dish.method 
-        ? `${noteText}\n\n${dish.method}` 
-        : noteText;
-      updates.method = newMethod;
+      const currentMethod = updates.method || dish.method || '';
+      if (!currentMethod.includes(noteText)) {
+        updates.method = currentMethod 
+          ? `${noteText}\n\n${currentMethod}` 
+          : noteText;
+      }
+      needsUpdate = true;
+    }
+
+    // 细分类迁移：空气炸锅→低卡，或重新猜测
+    const currentName = updates.name || dish.name;
+    if (!dish.subCategory || dish.subCategory === '空气炸锅') {
+      // 优先检查低卡关键词
+      const nameAndMethod = (currentName + ' ' + (dish.method || '') + ' ' + (dish.ingredients || ''));
+      if (/低卡|减脂|低脂|低热量|无油/.test(nameAndMethod)) {
+        updates.subCategory = '低卡';
+      } else {
+        const sub = guessSubCategory(currentName);
+        if (sub && sub !== dish.subCategory) {
+          updates.subCategory = sub;
+        }
+      }
       needsUpdate = true;
     }
 
