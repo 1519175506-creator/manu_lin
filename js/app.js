@@ -18,8 +18,15 @@ const App = {
     // 注册 Service Worker
     if ('serviceWorker' in navigator) {
       try {
-        const reg = await navigator.serviceWorker.register('sw.js');
-        // 强制激活新 SW
+        let refreshing = false;
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+          if (refreshing) return;
+          refreshing = true;
+          window.location.reload();
+        });
+
+        const reg = await navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' });
+        await reg.update();
         if (reg.waiting) {
           reg.waiting.postMessage({ type: 'SKIP_WAITING' });
         }
