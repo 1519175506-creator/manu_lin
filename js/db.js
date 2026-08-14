@@ -367,6 +367,34 @@ async function mergeDuplicateDishes() {
   return { merged: mergeCount };
 }
 
+// 为菜品生成AI图片URL
+function generateDishPhotoUrl(dishName, category) {
+  const prompt = encodeURIComponent(
+    `${dishName} Chinese home cooked dish, professional food photography, top view, on white ceramic plate, natural lighting, appetizing, high quality`
+  );
+  return `https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=${prompt}&image_size=square`;
+}
+
+// 迁移：为缺少图片的菜品自动生成AI图片
+async function migrateDishPhotos() {
+  const DONE_KEY = 'migrate_dish_photos_v1';
+  if (localStorage.getItem(DONE_KEY)) return { alreadyDone: true };
+
+  const dishes = await getAllDishes();
+  let updated = 0;
+
+  for (const dish of dishes) {
+    if (!dish.photo) {
+      const photoUrl = generateDishPhotoUrl(dish.name, dish.category);
+      await updateDish(dish.id, { photo: photoUrl });
+      updated++;
+    }
+  }
+
+  localStorage.setItem(DONE_KEY, JSON.stringify({ doneAt: Date.now(), updated }));
+  return { updated };
+}
+
 // 从菜名中提取括号内容（支持()、（）、[]、【】）
 function extractParenthetical(name) {
   if (!name) return { cleanName: name || '', inParenthesis: '' };

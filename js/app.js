@@ -73,6 +73,13 @@ const App = {
       this.showToast(`已合并${mergeResult.merged}道重复菜品`);
     }
 
+    // 为缺少图片的菜品自动生成AI图片
+    const photoResult = await migrateDishPhotos();
+    if (photoResult && !photoResult.alreadyDone && photoResult.updated > 0) {
+      console.log(`[图片生成] 已为 ${photoResult.updated} 道菜生成图片`);
+      this.showToast(`已为${photoResult.updated}道菜生成图片`);
+    }
+
     // 路由监听
     window.addEventListener('hashchange', () => this.router());
     this.router();
