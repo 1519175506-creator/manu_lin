@@ -51,6 +51,7 @@ db.version(5).stores({
 const SUB_CATEGORIES = {
   低卡: ['低卡版辣椒炒肉', '辣炖冻豆腐', '蒜蓉西兰花', '蒜香口蘑鸡胸肉', '口蘑虾滑', '凉拌菠菜', '凉拌黄瓜', '凉拌粉丝', '凉拌平菇', '凉拌娃娃菜', '盐水毛豆', '番茄榨菜汤', '鲫鱼豆腐汤', '白切鸡', '白切肉', '香煎鸡排'],
   电饭煲: ['电饭煲'],
+  空气炸锅: ['空气炸锅'],
   猪肉: ['红烧肉', '糖醋排骨', '回锅肉', '蒜泥白肉', '辣椒炒肉', '小炒肉', '叉烧', '菠萝炖猪排', '生炒排骨', '盐葱牛肉', '松板肉', '五花肉', '排骨'],
   鸡肉: ['宫保鸡丁', '可乐鸡翅', '白切鸡', '手撕鸡', '香煎鸡排', '盐葱鸡腿', '盐葱鸡', '干蒸豆豉鸡', '胡椒鸡', '江西辣鸡翅', '焦糖耗油鸡翅', '蒜香口蘑鸡胸肉', '鸡胸肉', '鸡翅'],
   牛肉: ['苦瓜牛肉', '酸辣土豆丝牛肉', '箩卜炖牛肉', '土豆炖牛腩', '牙签牛肉', '凉拌牛肉', '盐葱牛肉', '牛肉豆花饭', '牛肉'],
@@ -196,25 +197,28 @@ async function migrateDishTags() {
     const currentIngredients = updates.ingredients || dish.ingredients || '';
     const combinedText = currentName + ' ' + methodForCategory + ' ' + currentIngredients;
 
-    // 优先级：低卡 > 电饭煲 > 一锅出 > 其他
+    // 优先级：低卡 > 电饭煲 > 空气炸锅 > 其他
     const hasLowCard = /低卡|减脂|低脂|低热量|无油/.test(combinedText);
     const hasRiceCooker = /电饭煲|电饭锅/.test(combinedText);
+    const hasAirFryer = /空气炸锅/.test(combinedText);
 
-    if (!dish.subCategory || dish.subCategory === '空气炸锅') {
+    if (!dish.subCategory) {
       if (hasLowCard) {
         updates.subCategory = '低卡';
       } else if (hasRiceCooker) {
         updates.subCategory = '电饭煲';
+      } else if (hasAirFryer) {
+        updates.subCategory = '空气炸锅';
       } else {
         const sub = guessSubCategory(currentName);
-        if (sub && sub !== dish.subCategory) {
+        if (sub) {
           updates.subCategory = sub;
         }
       }
       needsUpdate = true;
-    } else if (hasRiceCooker && !hasLowCard && dish.subCategory !== '电饭煲' && dish.subCategory !== '低卡') {
-      // 已有分类但含电饭煲关键词（且非低卡优先），重新设为电饭煲
-      updates.subCategory = '电饭煲';
+    } else if (hasAirFryer && !hasLowCard && !hasRiceCooker && dish.subCategory !== '空气炸锅') {
+      // 已有分类但含空气炸锅关键词（且非低卡/电饭煲优先），设为空气炸锅
+      updates.subCategory = '空气炸锅';
       needsUpdate = true;
     }
 

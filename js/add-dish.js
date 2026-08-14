@@ -73,7 +73,7 @@ const AddDishView = {
           <label>细分类（按肉/烹饪方式）</label>
           <select id="dish-subcategory">
             <option value="">（未分类）</option>
-            ${['低卡', '电饭煲', '猪肉', '鸡肉', '牛肉', '海鲜', '一锅出'].map(sub => `
+            ${['低卡', '电饭煲', '空气炸锅', '猪肉', '鸡肉', '牛肉', '海鲜', '一锅出'].map(sub => `
               <option value="${sub}" ${dish && dish.subCategory === sub ? 'selected' : ''}>${sub}</option>
             `).join('')}
           </select>
