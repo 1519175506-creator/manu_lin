@@ -1883,9 +1883,7 @@
       "ingredients": "土豆若干（主料）、盐2勺、鸡精1勺、白糖1勺半、孜然粒/孜然粉适量、辣椒面3勺（微辣口味）、小米辣适量、白芝麻少许、花椒若干、食用油适量、香醋适量、葱花少许、清水少许",
       "method": "1. 土豆去皮，尽量切极薄的薄片，切好后可以清水淘洗一遍冲掉表面淀粉，口感更脆；\n2. 锅中加水大火烧开，下入全部土豆片焯水，煮至水面冒出白沫时立刻捞出，迅速放入凉水冲凉，控干多余水分备用，过凉水是土豆片保持脆爽不绵软的关键；\n3. 取一个大碗调配基础干料，依次放入2勺盐、1勺鸡精、一勺半白糖、孜然粒或孜然粉、3勺辣椒面、切好的小米辣、白芝麻，将所有干料混合平铺在碗底；\n4. 锅中倒入适量食用油，放入花椒小火炸出花椒香味，待油温升高后少量多次分次把热油淋在干料上，边淋边搅拌，充分激发出辣椒、孜然、花椒的复合香辣香气；\n5. 趁热往热油料汁里倒入适量香醋，高温能充分激发醋香，不会出现寡淡酸涩的口感，再加少量清水稀释料汁，搅拌均匀；\n6. 将控干水分的土豆片放入料汁碗中，充分翻拌，让每一片土豆片都均匀裹满香辣调味汁；\n7. 最后撒上足量新鲜葱花，再次抓拌几下即可装盘，酸辣鲜香、脆爽开胃，搭配冰镇啤酒食用风味更佳。",
       "notes": [],
-      "tags": [
-        "适合冷冻"
-      ],
+      "tags": [],
       "nutrition": {
         "calories": 0,
         "carbs": 0,
@@ -2570,14 +2568,15 @@
         "低脂",
         "高钾"
       ],
-      "subCategory": "低卡",
+      "subCategory": "",
       "nutrition": {
         "calories": 0,
         "carbs": 0,
         "fat": 0,
         "protein": 0
       },
-      "id": 297
+      "id": 297,
+      "subCategories": []
     },
     {
       "name": "干蒸豆豉鸡",
@@ -2965,14 +2964,15 @@
         "高钾",
         "抗炎"
       ],
-      "subCategory": "低卡",
+      "subCategory": "",
       "nutrition": {
         "calories": 0,
         "carbs": 0,
         "fat": 0,
         "protein": 0
       },
-      "id": 315
+      "id": 315,
+      "subCategories": []
     },
     {
       "name": "凉拌平菇",
@@ -2989,14 +2989,15 @@
         "低脂",
         "高钾"
       ],
-      "subCategory": "低卡",
+      "subCategory": "",
       "nutrition": {
         "calories": 0,
         "carbs": 0,
         "fat": 0,
         "protein": 0
       },
-      "id": 316
+      "id": 316,
+      "subCategories": []
     },
     {
       "name": "凉拌粉丝",
@@ -3012,14 +3013,15 @@
       "tags": [
         "低脂"
       ],
-      "subCategory": "低卡",
+      "subCategory": "",
       "nutrition": {
         "calories": 0,
         "carbs": 0,
         "fat": 0,
         "protein": 0
       },
-      "id": 317
+      "id": 317,
+      "subCategories": []
     },
     {
       "name": "凉拌黄瓜",
@@ -3035,14 +3037,15 @@
       "tags": [
         "低脂"
       ],
-      "subCategory": "低卡",
+      "subCategory": "",
       "nutrition": {
         "calories": 0,
         "carbs": 0,
         "fat": 0,
         "protein": 0
       },
-      "id": 318
+      "id": 318,
+      "subCategories": []
     },
     {
       "name": "凉拌娃娃菜",
@@ -3058,14 +3061,15 @@
       "tags": [
         "低脂"
       ],
-      "subCategory": "低卡",
+      "subCategory": "",
       "nutrition": {
         "calories": 0,
         "carbs": 0,
         "fat": 0,
         "protein": 0
       },
-      "id": 319
+      "id": 319,
+      "subCategories": []
     },
     {
       "name": "凉拌杏鲍菇",
@@ -3082,14 +3086,15 @@
         "低脂",
         "高钾"
       ],
-      "subCategory": "低卡",
+      "subCategory": "",
       "nutrition": {
         "calories": 0,
         "carbs": 0,
         "fat": 0,
         "protein": 0
       },
-      "id": 320
+      "id": 320,
+      "subCategories": []
     },
     {
       "name": "蒜泥白肉",

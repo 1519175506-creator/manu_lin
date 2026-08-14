@@ -49,7 +49,7 @@ db.version(5).stores({
 
 // ===== 细分类常量 =====
 const SUB_CATEGORIES = {
-  低卡: ['低卡版辣椒炒肉', '辣炖冻豆腐', '蒜蓉西兰花', '蒜香口蘑鸡胸肉', '口蘑虾滑', '凉拌菠菜', '凉拌黄瓜', '凉拌粉丝', '凉拌平菇', '凉拌娃娃菜', '盐水毛豆', '番茄榨菜汤', '鲫鱼豆腐汤', '白切鸡', '白切肉', '香煎鸡排'],
+  低卡: ['低卡版辣椒炒肉', '辣炖冻豆腐', '蒜蓉西兰花', '蒜香口蘑鸡胸肉', '口蘑虾滑', '番茄榨菜汤', '鲫鱼豆腐汤', '白切鸡', '白切肉', '香煎鸡排'],
   电饭煲: ['电饭煲'],
   空气炸锅: ['空气炸锅'],
   猪肉: ['红烧肉', '糖醋排骨', '回锅肉', '蒜泥白肉', '辣椒炒肉', '小炒肉', '叉烧', '菠萝炖猪排', '生炒排骨', '盐葱牛肉', '松板肉', '五花肉', '排骨'],
@@ -198,7 +198,8 @@ async function migrateDishTags() {
     const combinedText = currentName + ' ' + methodForCategory + ' ' + currentIngredients;
 
     // 优先级：空气炸锅 > 电饭煲 > 低卡 > 其他
-    const hasLowCard = /低卡|减脂|低脂|低热量|无油/.test(combinedText);
+    const isLiangban = dish.category === '凉菜' || /凉拌/.test(currentName);
+    const hasLowCard = !isLiangban && /低卡|减脂|低脂|低热量|无油/.test(combinedText);
     const hasRiceCooker = /电饭煲|电饭锅/.test(combinedText);
     const hasAirFryer = /空气炸锅/.test(combinedText);
 
@@ -226,6 +227,23 @@ async function migrateDishTags() {
       updates.subCategories = newSubCats;
       updates.subCategory = newSubCats[0]; // 主分类取第一个
       needsUpdate = true;
+    }
+
+    // 凉拌菜：去掉低卡分类和「适合冷冻」
+    if (isLiangban) {
+      const cats = (updates.subCategories || dish.subCategories || (dish.subCategory ? [dish.subCategory] : []))
+        .filter(c => c && c !== '低卡');
+      const currentSub = updates.subCategory !== undefined ? updates.subCategory : (dish.subCategory || '');
+      if (currentSub === '低卡' || (dish.subCategories || []).includes('低卡') || (updates.subCategories || []).includes('低卡')) {
+        updates.subCategories = cats;
+        updates.subCategory = cats[0] || '';
+        needsUpdate = true;
+      }
+      const tags = [...(updates.tags || dish.tags || [])];
+      if (tags.includes('适合冷冻')) {
+        updates.tags = tags.filter(t => t !== '适合冷冻');
+        needsUpdate = true;
+      }
     }
 
     // 清理食材：将换行/逗号分隔统一为、连接

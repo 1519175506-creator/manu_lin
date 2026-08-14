@@ -122,9 +122,10 @@ function guessCategoryAndSub(recipe) {
 
   // subCategory 多分类匹配
   const subCategories = [];
+  const isLiangban = /凉拌/.test(recipe.name || '') || recipe.category === '凉菜';
   if (/空气炸锅/.test(text)) subCategories.push('空气炸锅');
   if (/电饭煲|电饭锅/.test(text)) subCategories.push('电饭煲');
-  if (/低卡|减脂|低脂|低热量|无油/.test(text)) subCategories.push('低卡');
+  if (!isLiangban && /低卡|减脂|低脂|低热量|无油/.test(text)) subCategories.push('低卡');
   if (text.includes('一锅出') || text.includes('焖饭') || text.includes('焖菜') || text.includes('无水焗') || text.includes('蒸面') || text.includes('焖牛肉') || /一?锅(?!巴)/.test(text) || text.includes('电饭煲') && /饭/.test(text)) {
     if (!subCategories.includes('一锅出')) subCategories.push('一锅出');
   }
@@ -866,7 +867,7 @@ async function importFromFavoritesTxt() {
       category,
       subCategory,
       subCategories: subCategories || (subCategory ? [subCategory] : []),
-      tags: ['适合冷冻'],
+      tags: /凉拌/.test(finalName) ? [] : ['适合冷冻'],
       cooked: false,
       createdAt: Date.now(),
       updatedAt: Date.now(),
