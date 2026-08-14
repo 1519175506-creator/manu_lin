@@ -1448,3 +1448,38 @@ html, body {
   border-color: var(--primary);
   font-weight: 600;
 }
+
+/* ===== 点餐搭配 ===== */
+.order-stepper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 12px 0 8px;
+}
+
+.order-stepper .btn {
+  min-width: 44px;
+  padding: 8px 12px;
+}
+
+.order-guest-num {
+  font-size: 28px;
+  font-weight: 700;
+  min-width: 36px;
+  text-align: center;
+}
+
+.order-guest-hint {
+  font-size: 14px;
+  color: var(--text-light);
+}
+
+.order-set .dish-card {
+  align-items: center;
+}
+
+.order-swap-btn {
+  flex-shrink: 0;
+  padding: 6px 10px;
+  font-size: 12px;
+}

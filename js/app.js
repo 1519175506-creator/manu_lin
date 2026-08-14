@@ -10,7 +10,8 @@ const App = {
     'meals': '每日菜单',
     'settings': '我的',
     'shopping': '🛒 购物清单',
-    'wishlist': '💡 周日愿望清单'
+    'wishlist': '💡 周日愿望清单',
+    'order': '点餐搭配'
   },
 
   // 初始化
@@ -141,6 +142,9 @@ const App = {
       } else if (hash === '/wishlist') {
         this.setPageTitle('wishlist');
         await WishlistView.render(container);
+      } else if (hash === '/order') {
+        this.setPageTitle('order');
+        await OrderView.render(container);
       } else {
         container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🐭</div><p>页面不存在</p></div>';
       }
@@ -166,7 +170,7 @@ const App = {
     else if (hash === '/plan') tabName = 'plan';
     else if (hash === '/add' || hash.startsWith('/edit/')) tabName = 'add';
     else if (hash === '/meals') tabName = 'meals';
-    else if (hash === '/settings') tabName = 'settings';
+    else if (hash === '/settings' || hash === '/order' || hash === '/shopping' || hash === '/wishlist') tabName = 'settings';
     // 详情页不高亮任何 tab
     if (!hash.startsWith('/dish/')) {
       const activeTab = document.querySelector(`.nav-item[data-tab="${tabName}"]`);
@@ -185,7 +189,8 @@ const App = {
       'meals': '🗒️ 每日菜单',
       'settings': '🐾 我的',
       'shopping': '🛒 购物清单',
-      'wishlist': '💡 周日愿望清单'
+      'wishlist': '💡 周日愿望清单',
+      'order': '点餐搭配'
     };
     document.getElementById('page-title').textContent = titleMap[view] || '⚡ 小lin食铺';
   },

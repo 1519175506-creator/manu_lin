@@ -28,7 +28,7 @@ const SettingsView = {
         </div>
       </div>
 
-      <div class="stats-grid" style="grid-template-columns:1fr 1fr">
+      <div class="stats-grid" style="grid-template-columns:1fr 1fr 1fr">
         <a href="#/shopping" class="stat-card" style="text-decoration:none;color:inherit;cursor:pointer">
           <div class="stat-number" style="color:var(--primary-dark)">🛒 ${cartCount}</div>
           <div class="stat-label">购物清单</div>
@@ -36,6 +36,10 @@ const SettingsView = {
         <a href="#/wishlist" class="stat-card" style="text-decoration:none;color:inherit;cursor:pointer">
           <div class="stat-number" style="color:#7B1FA2">💡 ${wishCount}</div>
           <div class="stat-label">周日愿望清单</div>
+        </a>
+        <a href="#/order" class="stat-card" style="text-decoration:none;color:inherit;cursor:pointer">
+          <div class="stat-number" style="color:#E65100">🍽</div>
+          <div class="stat-label">点餐搭配</div>
         </a>
       </div>
 
