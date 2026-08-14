@@ -407,6 +407,7 @@ html, body {
 .dish-card.cat-鸡肉 .dish-photo { background: linear-gradient(135deg, #FFF8E1, #FFD54F); }
 .dish-card.cat-牛肉 .dish-photo { background: linear-gradient(135deg, #FFEBEE, #EF9A9A); }
 .dish-card.cat-低卡 .dish-photo { background: linear-gradient(135deg, #F3E5F5, #CE93D8); }
+.dish-card.cat-电饭煲 .dish-photo { background: linear-gradient(135deg, #FFF3E0, #FFB74D); }
 .dish-card.cat-一锅出 .dish-photo { background: linear-gradient(135deg, #E0F2F1, #80CBC4); }
 
 /* 统计卡片多样化配色 */
@@ -482,6 +483,11 @@ html, body {
   line-height: 1.6;
   white-space: pre-wrap;
   color: #555;
+}
+
+.detail-section p.ingredient-inline {
+  white-space: normal;
+  line-height: 1.8;
 }
 
 /* 可编辑区域样式 */

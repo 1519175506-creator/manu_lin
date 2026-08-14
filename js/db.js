@@ -50,6 +50,7 @@ db.version(5).stores({
 // ===== 细分类常量 =====
 const SUB_CATEGORIES = {
   低卡: ['低卡版辣椒炒肉', '辣炖冻豆腐', '蒜蓉西兰花', '蒜香口蘑鸡胸肉', '口蘑虾滑', '凉拌菠菜', '凉拌黄瓜', '凉拌粉丝', '凉拌平菇', '凉拌娃娃菜', '盐水毛豆', '番茄榨菜汤', '鲫鱼豆腐汤', '白切鸡', '白切肉', '香煎鸡排'],
+  电饭煲: ['电饭煲'],
   猪肉: ['红烧肉', '糖醋排骨', '回锅肉', '蒜泥白肉', '辣椒炒肉', '小炒肉', '叉烧', '菠萝炖猪排', '生炒排骨', '盐葱牛肉', '松板肉', '五花肉', '排骨'],
   鸡肉: ['宫保鸡丁', '可乐鸡翅', '白切鸡', '手撕鸡', '香煎鸡排', '盐葱鸡腿', '盐葱鸡', '干蒸豆豉鸡', '胡椒鸡', '江西辣鸡翅', '焦糖耗油鸡翅', '蒜香口蘑鸡胸肉', '鸡胸肉', '鸡翅'],
   牛肉: ['苦瓜牛肉', '酸辣土豆丝牛肉', '箩卜炖牛肉', '土豆炖牛腩', '牙签牛肉', '凉拌牛肉', '盐葱牛肉', '牛肉豆花饭', '牛肉'],
@@ -141,7 +142,7 @@ async function migrateDishTags() {
       needsUpdate = true;
     }
 
-    // 菜名清理：删除"空气炸锅"、"锡纸"前缀/中缀
+    // 菜名清理：删除"空气炸锅"、"锡纸"、"家庭复刻"、"家常"
     let cleanedName = dish.name;
     // 删除开头的"空气炸锅"
     cleanedName = cleanedName.replace(/^空气炸锅/g, '');
@@ -150,36 +151,60 @@ async function migrateDishTags() {
     // 删除"锡纸"前缀和中间出现
     cleanedName = cleanedName.replace(/^锡纸/g, '');
     cleanedName = cleanedName.replace(/锡纸/g, '');
-    // 清理多余空格和可能残留的"版"字后缀
+    // 删除"家庭复刻"（如"家庭复刻香辣鸡公煲"→"香辣鸡公煲"）
+    cleanedName = cleanedName.replace(/家庭复刻/g, '');
+    // 删除"家常"前缀（如"家常虎皮青椒鸡蛋把子肉"→"虎皮青椒鸡蛋把子肉"）
+    cleanedName = cleanedName.replace(/家常/g, '');
+    // 清理多余空格
     cleanedName = cleanedName.replace(/\s+/g, ' ').trim();
-    // 清理可能出现的连续括号或标点
+    // 清理可能出现的连续标点
     cleanedName = cleanedName.replace(/^[\s、，,]+/, '').trim();
     if (cleanedName !== dish.name) {
       updates.name = cleanedName;
       needsUpdate = true;
     }
 
+    // 清理做法：删除【备注】行和多余空行
+    const currentMethod = updates.method || dish.method || '';
+    if (currentMethod) {
+      let cleanedMethod = currentMethod;
+      // 删除【备注】开头的行及其后紧跟的空行
+      cleanedMethod = cleanedMethod.replace(/^【备注】[^\n]*\n*/gm, '');
+      // 删除孤立的【备注】行
+      cleanedMethod = cleanedMethod.replace(/^【备注】[^\n]*$/gm, '');
+      // 压缩多个连续空行为单个
+      cleanedMethod = cleanedMethod.replace(/\n{3,}/g, '\n\n');
+      // 删除开头的空行
+      cleanedMethod = cleanedMethod.replace(/^\n+/, '');
+      if (cleanedMethod !== currentMethod) {
+        updates.method = cleanedMethod.trim();
+        needsUpdate = true;
+      }
+    }
+
     // 菜名括号内容迁移到做法备注
     const extractResult = extractParenthetical(updates.name || dish.name);
     if (extractResult.inParenthesis) {
       updates.name = extractResult.cleanName;
-      const noteText = `【备注】${extractResult.inParenthesis}`;
-      const currentMethod = updates.method || dish.method || '';
-      if (!currentMethod.includes(noteText)) {
-        updates.method = currentMethod 
-          ? `${noteText}\n\n${currentMethod}` 
-          : noteText;
-      }
+      // 括号内容已经在上方清理时从做法中移除，不再追加
       needsUpdate = true;
     }
 
-    // 细分类迁移：空气炸锅→低卡，或重新猜测
+    // 细分类迁移
     const currentName = updates.name || dish.name;
+    const currentMethod = updates.method || dish.method || '';
+    const currentIngredients = updates.ingredients || dish.ingredients || '';
+    const combinedText = currentName + ' ' + currentMethod + ' ' + currentIngredients;
+
+    // 优先级：低卡 > 电饭煲 > 一锅出 > 其他
+    const hasLowCard = /低卡|减脂|低脂|低热量|无油/.test(combinedText);
+    const hasRiceCooker = /电饭煲|电饭锅/.test(combinedText);
+
     if (!dish.subCategory || dish.subCategory === '空气炸锅') {
-      // 优先检查低卡关键词
-      const nameAndMethod = (currentName + ' ' + (dish.method || '') + ' ' + (dish.ingredients || ''));
-      if (/低卡|减脂|低脂|低热量|无油/.test(nameAndMethod)) {
+      if (hasLowCard) {
         updates.subCategory = '低卡';
+      } else if (hasRiceCooker) {
+        updates.subCategory = '电饭煲';
       } else {
         const sub = guessSubCategory(currentName);
         if (sub && sub !== dish.subCategory) {
@@ -187,6 +212,23 @@ async function migrateDishTags() {
         }
       }
       needsUpdate = true;
+    } else if (hasRiceCooker && !hasLowCard && dish.subCategory !== '电饭煲' && dish.subCategory !== '低卡') {
+      // 已有分类但含电饭煲关键词（且非低卡优先），重新设为电饭煲
+      updates.subCategory = '电饭煲';
+      needsUpdate = true;
+    }
+
+    // 清理食材：将换行/逗号分隔统一为、连接
+    if (dish.ingredients && !updates.ingredients) {
+      const normalized = dish.ingredients
+        .split(/[\n,，;；]+/)
+        .map(s => s.trim())
+        .filter(Boolean)
+        .join('、');
+      if (normalized !== dish.ingredients) {
+        updates.ingredients = normalized;
+        needsUpdate = true;
+      }
     }
 
     if (needsUpdate) {
@@ -496,7 +538,7 @@ function aggregateIngredients(dishes, servingsPerDish = 1) {
   
   for (const dish of dishes) {
     if (!dish.ingredients) continue;
-    const lines = dish.ingredients.split(/[\n,，;；]+/);
+    const lines = dish.ingredients.split(/[\n,，;；、]+/);
     for (const line of lines) {
       const parsed = parseIngredientLine(line);
       if (!parsed) continue;

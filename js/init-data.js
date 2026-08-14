@@ -106,10 +106,12 @@ function extractNameParenthetical(name) {
 function guessCategoryAndSub(recipe) {
   const text = (recipe.name + ' ' + recipe.ingredients + ' ' + recipe.method).toLowerCase();
 
-  // subCategory 优先匹配：低卡 > 一锅出 > 海鲜 > 牛肉 > 鸡肉 > 猪肉
+  // subCategory 优先匹配：低卡 > 电饭煲 > 一锅出 > 海鲜 > 牛肉 > 鸡肉 > 猪肉
   let subCategory = '';
   if (/低卡|减脂|低脂|低热量|无油/.test(text)) {
     subCategory = '低卡';
+  } else if (/电饭煲|电饭锅/.test(text)) {
+    subCategory = '电饭煲';
   } else if (text.includes('一锅出') || text.includes('焖饭') || text.includes('焖菜') || text.includes('无水焗') || text.includes('蒸面') || text.includes('焖牛肉') || /一?锅(?!巴)/.test(text) || text.includes('电饭煲') && /饭/.test(text)) {
     subCategory = '一锅出';
   } else if (/\b虾\b|鱼|花螺|鲍鱼|鱿鱼|扇贝|蟹|贝|海鲜|虾仁|虾滑|基围虾|罗氏虾/.test(text)) {

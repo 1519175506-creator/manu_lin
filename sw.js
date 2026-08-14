@@ -1,5 +1,5 @@
 // Service Worker - 离线缓存
-const CACHE_NAME = 'recipe-app-v17';
+const CACHE_NAME = 'recipe-app-v18';
 const ASSETS = [
   './',
   './index.html',

@@ -7,13 +7,13 @@ const DishesView = {
   searchKeyword: '',
 
   // 细分类选项
-  subCategories: ['all', '低卡', '猪肉', '鸡肉', '牛肉', '海鲜', '一锅出'],
+  subCategories: ['all', '低卡', '电饭煲', '猪肉', '鸡肉', '牛肉', '海鲜', '一锅出'],
 
   // 渲染菜品列表
   async renderList(container) {
     const categories = ['all', 'cooked', 'uncooked', '荤菜', '素菜', '汤', '凉菜', '主食'];
     const labels = { all: '全部', cooked: '已做过 ✔', uncooked: '没做过', '荤菜': '荤菜', '素菜': '素菜', '汤': '汤', '凉菜': '凉菜', '主食': '主食' };
-    const subLabels = { all: '🏷️ 全部', '低卡': '🥗 低卡', '猪肉': '🐷 猪肉', '鸡肉': '🐔 鸡肉', '牛肉': '🐮 牛肉', '海鲜': '🦐 海鲜', '一锅出': '🍲 一锅出' };
+    const subLabels = { all: '🏷️ 全部', '低卡': '🥗 低卡', '电饭煲': '🍚 电饭煲', '猪肉': '🐷 猪肉', '鸡肉': '🐔 鸡肉', '牛肉': '🐮 牛肉', '海鲜': '🦐 海鲜', '一锅出': '🍲 一锅出' };
 
     container.innerHTML = `
       <input type="text" class="search-bar" id="search-input"
@@ -176,9 +176,14 @@ const DishesView = {
       ? `<p class="detail-editable" data-field="douyinUrl" title="点击编辑">📺 <a href="${App.escapeHtml(dish.douyinUrl)}" class="detail-link" target="_blank">${App.escapeHtml(dish.douyinUrl)}</a> <span class="edit-hint">✎</span></p>`
       : `<p class="detail-editable" data-field="douyinUrl" title="点击添加">➕ 添加视频链接 <span class="edit-hint">✎</span></p>`;
 
+    // 食材显示：将换行/逗号/分号/顿号统一为、连接
+    const displayIngredients = dish.ingredients
+      ? dish.ingredients.split(/[\n,，;；、]+/).filter(Boolean).join('、')
+      : '';
+
     const ingredientsHtml = dish.ingredients
-      ? `<p class="detail-editable detail-text" data-field="ingredients" title="点击编辑">${App.escapeHtml(dish.ingredients)} <span class="edit-hint">✎</span></p>`
-      : `<p class="detail-editable" data-field="ingredients" title="点击添加">➕ 点击添加食材信息 <span class="edit-hint">✎</span></p>`;
+      ? `<p class="detail-editable detail-text ingredient-inline" data-field="ingredients" title="点击编辑">${App.escapeHtml(displayIngredients)} <span class="edit-hint">✎</span></p>`
+      : `<p class="detail-editable ingredient-inline" data-field="ingredients" title="点击添加">➕ 点击添加食材信息 <span class="edit-hint">✎</span></p>`;
 
     const methodHtml = dish.method
       ? `<p class="detail-editable detail-text" data-field="method" title="点击编辑">${App.escapeHtml(dish.method)} <span class="edit-hint">✎</span></p>`
@@ -466,6 +471,7 @@ const DishesView = {
   getSubCategoryIcon(subCat) {
     const map = {
       '低卡': '🥗',
+      '电饭煲': '🍚',
       '猪肉': '🐷',
       '鸡肉': '🐔',
       '牛肉': '🐮',
