@@ -65,6 +65,8 @@ const DishesView = {
       });
     }
 
+    dishes.sort((a, b) => (a.name || '').localeCompare(b.name || '', 'zh-CN', { sensitivity: 'base' }));
+
     const listContainer = container.querySelector('#dish-list-container');
     if (!listContainer) return;
 
