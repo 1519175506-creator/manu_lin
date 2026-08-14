@@ -36,6 +36,12 @@ const App = {
       }
     }
 
+    // 用 GitHub 上的完整备份覆盖本地数据（仅执行一次）
+    const backupResult = await importFullBackupOverwrite();
+    if (backupResult && !backupResult.alreadyDone && !backupResult.error) {
+      this.showToast(`已覆盖导入 ${backupResult.dishCount} 道菜谱 ⚡`);
+    }
+
     // 导入初始数据
     const imported = await initInitialData();
     if (imported) {

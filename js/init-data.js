@@ -894,3 +894,39 @@ async function importFromFavoritesTxt() {
     samples: createdDishes.slice(0, 20)
   };
 }
+
+// 用 data/full-backup.json 覆盖 IndexedDB（幂等）
+async function importFullBackupOverwrite() {
+  const DONE_KEY = 'full_backup_overwrite_20260814_v1';
+  if (localStorage.getItem(DONE_KEY)) {
+    return { alreadyDone: true };
+  }
+
+  try {
+    const response = await fetch('data/full-backup.json');
+    if (!response.ok) throw new Error('读取备份失败: ' + response.status);
+    const data = await response.json();
+    if (!data || !data.dishes) throw new Error('备份格式不正确');
+
+    await importAllData(data);
+
+    localStorage.setItem(DONE_KEY, JSON.stringify({
+      doneAt: Date.now(),
+      exportDate: data.exportDate,
+      dishCount: data.dishes.length
+    }));
+
+    // 避免收藏夹导入把带抖音链接的备份菜删掉
+    if (!localStorage.getItem('favorites_import_done_v17')) {
+      localStorage.setItem('favorites_import_done_v17', JSON.stringify({
+        doneAt: Date.now(),
+        skippedDueTo: DONE_KEY
+      }));
+    }
+
+    return { alreadyDone: false, dishCount: data.dishes.length, exportDate: data.exportDate };
+  } catch (err) {
+    console.error('备份覆盖导入失败:', err);
+    return { error: true };
+  }
+}
