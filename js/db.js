@@ -197,18 +197,18 @@ async function migrateDishTags() {
     const currentIngredients = updates.ingredients || dish.ingredients || '';
     const combinedText = currentName + ' ' + methodForCategory + ' ' + currentIngredients;
 
-    // 优先级：低卡 > 电饭煲 > 空气炸锅 > 其他
+    // 优先级：空气炸锅 > 电饭煲 > 低卡 > 其他
     const hasLowCard = /低卡|减脂|低脂|低热量|无油/.test(combinedText);
     const hasRiceCooker = /电饭煲|电饭锅/.test(combinedText);
     const hasAirFryer = /空气炸锅/.test(combinedText);
 
     if (!dish.subCategory) {
-      if (hasLowCard) {
-        updates.subCategory = '低卡';
+      if (hasAirFryer) {
+        updates.subCategory = '空气炸锅';
       } else if (hasRiceCooker) {
         updates.subCategory = '电饭煲';
-      } else if (hasAirFryer) {
-        updates.subCategory = '空气炸锅';
+      } else if (hasLowCard) {
+        updates.subCategory = '低卡';
       } else {
         const sub = guessSubCategory(currentName);
         if (sub) {
@@ -216,8 +216,8 @@ async function migrateDishTags() {
         }
       }
       needsUpdate = true;
-    } else if (hasAirFryer && !hasLowCard && !hasRiceCooker && dish.subCategory !== '空气炸锅') {
-      // 已有分类但含空气炸锅关键词（且非低卡/电饭煲优先），设为空气炸锅
+    } else if (hasAirFryer && dish.subCategory !== '空气炸锅') {
+      // 含空气炸锅关键词的优先归为空气炸锅
       updates.subCategory = '空气炸锅';
       needsUpdate = true;
     }
