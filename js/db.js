@@ -165,9 +165,9 @@ async function migrateDishTags() {
     }
 
     // 清理做法：删除【备注】行和多余空行
-    const currentMethod = updates.method || dish.method || '';
-    if (currentMethod) {
-      let cleanedMethod = currentMethod;
+    let methodToClean = updates.method || dish.method || '';
+    if (methodToClean) {
+      let cleanedMethod = methodToClean;
       // 删除【备注】开头的行及其后紧跟的空行
       cleanedMethod = cleanedMethod.replace(/^【备注】[^\n]*\n*/gm, '');
       // 删除孤立的【备注】行
@@ -176,7 +176,7 @@ async function migrateDishTags() {
       cleanedMethod = cleanedMethod.replace(/\n{3,}/g, '\n\n');
       // 删除开头的空行
       cleanedMethod = cleanedMethod.replace(/^\n+/, '');
-      if (cleanedMethod !== currentMethod) {
+      if (cleanedMethod !== methodToClean) {
         updates.method = cleanedMethod.trim();
         needsUpdate = true;
       }
@@ -192,9 +192,9 @@ async function migrateDishTags() {
 
     // 细分类迁移
     const currentName = updates.name || dish.name;
-    const currentMethod = updates.method || dish.method || '';
+    const methodForCategory = updates.method || dish.method || '';
     const currentIngredients = updates.ingredients || dish.ingredients || '';
-    const combinedText = currentName + ' ' + currentMethod + ' ' + currentIngredients;
+    const combinedText = currentName + ' ' + methodForCategory + ' ' + currentIngredients;
 
     // 优先级：低卡 > 电饭煲 > 一锅出 > 其他
     const hasLowCard = /低卡|减脂|低脂|低热量|无油/.test(combinedText);
@@ -367,26 +367,43 @@ async function mergeDuplicateDishes() {
   return { merged: mergeCount };
 }
 
-// 为菜品生成AI图片URL
-function generateDishPhotoUrl(dishName, category) {
-  const prompt = encodeURIComponent(
-    `${dishName} Chinese home cooked dish, professional food photography, top view, on white ceramic plate, natural lighting, appetizing, high quality`
-  );
-  return `https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=${prompt}&image_size=square`;
+// 根据菜品分类/细分类返回对应emoji图标
+function getDishEmoji(dish) {
+  const subCat = dish.subCategory || '';
+  const cat = dish.category || '';
+  const name = dish.name || '';
+
+  // 按细分类匹配
+  if (subCat === '低卡' || /低卡|减脂|低脂/.test(name)) return '🥗';
+  if (subCat === '电饭煲' || /电饭煲|电饭锅/.test(name)) return '🍚';
+  if (subCat === '海鲜' || /虾|鱼|蟹|贝|鱿鱼|花螺|蛏/.test(name)) return '🦐';
+  if (subCat === '牛肉' || /牛/.test(name)) return '🥩';
+  if (subCat === '鸡肉' || /鸡/.test(name)) return '🍗';
+  if (subCat === '猪肉' || /猪|排骨|五花|肉沫|肉末|里脊/.test(name)) return '🍖';
+  if (subCat === '一锅出' || /焖|一锅/.test(name)) return '🍲';
+
+  // 按大分类匹配
+  if (cat === '汤') return '🍲';
+  if (cat === '凉菜' || /凉拌/.test(name)) return '🥒';
+  if (cat === '主食' || /饭|面|饼|粥|蛋挞/.test(name)) return '🍚';
+  if (cat === '素菜') return '🥬';
+  if (cat === '荤菜') return '🍳';
+
+  return '🍳';
 }
 
-// 迁移：为缺少图片的菜品自动生成AI图片
+// 迁移：清理无效的AI图片URL，改用emoji图标
 async function migrateDishPhotos() {
-  const DONE_KEY = 'migrate_dish_photos_v1';
+  const DONE_KEY = 'migrate_dish_photos_v2';
   if (localStorage.getItem(DONE_KEY)) return { alreadyDone: true };
 
   const dishes = await getAllDishes();
   let updated = 0;
 
   for (const dish of dishes) {
-    if (!dish.photo) {
-      const photoUrl = generateDishPhotoUrl(dish.name, dish.category);
-      await updateDish(dish.id, { photo: photoUrl });
+    // 清理无效的text_to_image URL（这些URL在浏览器中返回默认占位图）
+    if (dish.photo && dish.photo.includes('text_to_image')) {
+      await updateDish(dish.id, { photo: null });
       updated++;
     }
   }

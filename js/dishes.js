@@ -79,7 +79,7 @@ const DishesView = {
       for (const dish of dishes) {
         const photoHtml = dish.photo
           ? `<img src="${dish.photo}" alt="${App.escapeHtml(dish.name)}">`
-          : '🍳';
+          : getDishEmoji(dish);
         const tagsHtml = (dish.tags && dish.tags.length > 0)
           ? dish.tags.map(tag => `<span class="dish-tag-mini">${tag}</span>`).join('')
           : '';
