@@ -163,8 +163,18 @@ const OrderView = {
   },
 
   isSpicy(dish) {
-    const t = (dish.name || '') + ' ' + (dish.method || '') + ' ' + (dish.ingredients || '');
-    return /辣|麻辣|麻婆|小米椒|干锅|香辣|泡椒|藤椒|剁椒|辣椒|二荆条/.test(t);
+    const name = dish.name || '';
+    // 菜名已是清淡/炖煮/低卡，不因蘸料里的小米辣、撒一点香辣粉判成重口
+    if (/清炖|清蒸|白切|白灼|白煮|低卡/.test(name)) return false;
+
+    const raw = name + ' ' + (dish.method || '') + ' ' + (dish.ingredients || '');
+    const t = raw
+      .replace(/蘸料[：:].*/g, ' ')
+      .replace(/调配蘸料[\s\S]*/g, ' ')
+      .replace(/香辣粉/g, ' ');
+
+    return /麻辣|麻婆|干锅|香辣|泡椒|藤椒|剁椒|辣椒油|干辣椒|二荆条|水煮|辣子|小米辣|小米椒/.test(t)
+      || (/辣/.test(name) && !/低卡|清/.test(name));
   },
 
   isLowCal(dish) {
