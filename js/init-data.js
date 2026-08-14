@@ -120,25 +120,21 @@ function extractNameParenthetical(name) {
 function guessCategoryAndSub(recipe) {
   const text = (recipe.name + ' ' + recipe.ingredients + ' ' + recipe.method).toLowerCase();
 
-  // subCategory 优先匹配：空气炸锅 > 电饭煲 > 低卡 > 一锅出 > 海鲜 > 牛肉 > 鸡肉 > 猪肉
-  let subCategory = '';
-  if (/空气炸锅/.test(text)) {
-    subCategory = '空气炸锅';
-  } else if (/电饭煲|电饭锅/.test(text)) {
-    subCategory = '电饭煲';
-  } else if (/低卡|减脂|低脂|低热量|无油/.test(text)) {
-    subCategory = '低卡';
-  } else if (text.includes('一锅出') || text.includes('焖饭') || text.includes('焖菜') || text.includes('无水焗') || text.includes('蒸面') || text.includes('焖牛肉') || /一?锅(?!巴)/.test(text) || text.includes('电饭煲') && /饭/.test(text)) {
-    subCategory = '一锅出';
-  } else if (/\b虾\b|鱼|花螺|鲍鱼|鱿鱼|扇贝|蟹|贝|海鲜|虾仁|虾滑|基围虾|罗氏虾/.test(text)) {
-    subCategory = '海鲜';
-  } else if (/牛|牛腩|牛腱|牛排|肥牛|牛肉/.test(text)) {
-    subCategory = '牛肉';
-  } else if (/鸡|鸡腿|鸡胸|鸡翅|奥尔良|鸡块|鸡肉|鸡丝|鸡肉|鸡架/.test(text)) {
-    subCategory = '鸡肉';
-  } else if (/猪|猪肉|排骨|五花肉|梅花肉|猪排|肋排|里脊|肉馅|肉沫|五花/.test(text)) {
-    subCategory = '猪肉';
+  // subCategory 多分类匹配
+  const subCategories = [];
+  if (/空气炸锅/.test(text)) subCategories.push('空气炸锅');
+  if (/电饭煲|电饭锅/.test(text)) subCategories.push('电饭煲');
+  if (/低卡|减脂|低脂|低热量|无油/.test(text)) subCategories.push('低卡');
+  if (text.includes('一锅出') || text.includes('焖饭') || text.includes('焖菜') || text.includes('无水焗') || text.includes('蒸面') || text.includes('焖牛肉') || /一?锅(?!巴)/.test(text) || text.includes('电饭煲') && /饭/.test(text)) {
+    if (!subCategories.includes('一锅出')) subCategories.push('一锅出');
   }
+  if (subCategories.length === 0) {
+    if (/\b虾\b|鱼|花螺|鲍鱼|鱿鱼|扇贝|蟹|贝|海鲜|虾仁|虾滑|基围虾|罗氏虾/.test(text)) subCategories.push('海鲜');
+    else if (/牛|牛腩|牛腱|牛排|肥牛|牛肉/.test(text)) subCategories.push('牛肉');
+    else if (/鸡|鸡腿|鸡胸|鸡翅|奥尔良|鸡块|鸡肉|鸡丝|鸡肉|鸡架/.test(text)) subCategories.push('鸡肉');
+    else if (/猪|猪肉|排骨|五花肉|梅花肉|猪排|肋排|里脊|肉馅|肉沫|五花/.test(text)) subCategories.push('猪肉');
+  }
+  const subCategory = subCategories[0] || '';
 
   // category（荤菜 / 素菜）
   let category = '荤菜';
@@ -146,7 +142,7 @@ function guessCategoryAndSub(recipe) {
     category = '素菜';
   }
 
-  return { category, subCategory };
+  return { category, subCategory, subCategories };
 }
 
 // 解析"收藏夹菜谱.txt"的文本内容 → 菜谱数组
@@ -857,7 +853,7 @@ async function importFromFavoritesTxt() {
     seenNames.add(finalName);
 
     // 自动猜分类
-    const { category, subCategory } = guessCategoryAndSub({
+    const { category, subCategory, subCategories } = guessCategoryAndSub({
       name: finalName,
       ingredients: recipe.ingredients,
       method: finalMethod
@@ -869,6 +865,7 @@ async function importFromFavoritesTxt() {
       method: finalMethod || '',
       category,
       subCategory,
+      subCategories: subCategories || (subCategory ? [subCategory] : []),
       tags: ['适合冷冻'],
       cooked: false,
       createdAt: Date.now(),

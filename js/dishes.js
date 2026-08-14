@@ -57,9 +57,12 @@ const DishesView = {
       dishes = dishes.filter(d => d.category === this.filter);
     }
 
-    // 细分类过滤
+    // 细分类过滤（支持多分类）
     if (this.subFilter !== 'all') {
-      dishes = dishes.filter(d => d.subCategory === this.subFilter);
+      dishes = dishes.filter(d => {
+        const cats = d.subCategories || (d.subCategory ? [d.subCategory] : []);
+        return cats.includes(this.subFilter);
+      });
     }
 
     const listContainer = container.querySelector('#dish-list-container');
@@ -83,12 +86,14 @@ const DishesView = {
         const tagsHtml = (dish.tags && dish.tags.length > 0)
           ? dish.tags.map(tag => `<span class="dish-tag-mini">${tag}</span>`).join('')
           : '';
-        const subCatHtml = dish.subCategory
-          ? `<span class="dish-tag-mini" style="background:#FFF3E0;color:#E65100">${this.getSubCategoryIcon(dish.subCategory)} ${App.escapeHtml(dish.subCategory)}</span>`
+        const allSubCats = dish.subCategories || (dish.subCategory ? [dish.subCategory] : []);
+        const subCatHtml = allSubCats.length > 0
+          ? allSubCats.map(sc => `<span class="dish-tag-mini" style="background:#FFF3E0;color:#E65100">${this.getSubCategoryIcon(sc)} ${App.escapeHtml(sc)}</span>`).join('')
           : '';
         // 添加分类和细分类的CSS类，用于多样化配色
           const catClass = dish.category ? `cat-${App.escapeHtml(dish.category)}` : '';
-          const subCatClass = dish.subCategory ? `cat-${App.escapeHtml(dish.subCategory)}` : '';
+          const firstSubCat = allSubCats[0] || '';
+          const subCatClass = firstSubCat ? `cat-${App.escapeHtml(firstSubCat)}` : '';
           const cardClasses = [catClass, subCatClass].filter(Boolean).join(' ');
           html += `
           <div class="dish-card ${cardClasses}" data-id="${dish.id}">
@@ -194,8 +199,9 @@ const DishesView = {
       : '';
 
     // 细分类标签
-    const subCategoryHtml = dish.subCategory
-      ? `<span class="detail-tag tag-subcategory">${this.getSubCategoryIcon(dish.subCategory)} ${App.escapeHtml(dish.subCategory)}</span>`
+    const allSubCats = dish.subCategories || (dish.subCategory ? [dish.subCategory] : []);
+    const subCategoryHtml = allSubCats.length > 0
+      ? allSubCats.map(sc => `<span class="detail-tag tag-subcategory">${this.getSubCategoryIcon(sc)} ${App.escapeHtml(sc)}</span>`).join(' ')
       : '';
 
     // 营养数据

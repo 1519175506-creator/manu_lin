@@ -70,13 +70,15 @@ const AddDishView = {
           </select>
         </div>
         <div class="form-group">
-          <label>细分类（按肉/烹饪方式）</label>
-          <select id="dish-subcategory">
-            <option value="">（未分类）</option>
-            ${['低卡', '电饭煲', '空气炸锅', '猪肉', '鸡肉', '牛肉', '海鲜', '一锅出'].map(sub => `
-              <option value="${sub}" ${dish && dish.subCategory === sub ? 'selected' : ''}>${sub}</option>
-            `).join('')}
-          </select>
+          <label>细分类（可多选，按肉/烹饪方式）</label>
+          <div id="dish-subcategory-list" style="display:flex;flex-wrap:wrap;gap:8px">
+            ${['低卡', '电饭煲', '空气炸锅', '猪肉', '鸡肉', '牛肉', '海鲜', '一锅出'].map(sub => {
+              const selected = dish && ((dish.subCategories || (dish.subCategory ? [dish.subCategory] : [])).includes(sub));
+              return `<label class="checkbox-group" style="background:${selected ? 'var(--primary-light)' : '#f5f5f5'};border:1px solid ${selected ? 'var(--primary)' : '#ddd'};border-radius:20px;padding:6px 14px;cursor:pointer">
+                <input type="checkbox" value="${sub}" ${selected ? 'checked' : ''} class="sub-cat-cb" style="display:none">${sub}
+              </label>`;
+            }).join('')}
+          </div>
           <p style="font-size:12px;color:var(--text-light);margin-top:4px">💡 加新菜会根据菜名自动猜，不对可以手动改</p>
         </div>
         <div class="form-group">
@@ -320,10 +322,13 @@ const AddDishView = {
     const photoPreview = container.querySelector('#photo-preview');
     const photo = photoPreview.dataset.photo || (existingDish ? existingDish.photo : null);
 
+    const subCats = Array.from(container.querySelectorAll('.sub-cat-cb:checked')).map(cb => cb.value);
+
     const data = {
       name: name,
       category: container.querySelector('#dish-category').value,
-      subCategory: container.querySelector('#dish-subcategory').value,
+      subCategory: subCats[0] || '',
+      subCategories: subCats,
       cooked: container.querySelector('#dish-cooked').checked,
       douyinUrl: container.querySelector('#dish-douyin-url').value.trim(),
       ingredients: container.querySelector('#dish-ingredients').value.trim(),

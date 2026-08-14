@@ -202,23 +202,29 @@ async function migrateDishTags() {
     const hasRiceCooker = /电饭煲|电饭锅/.test(combinedText);
     const hasAirFryer = /空气炸锅/.test(combinedText);
 
-    if (!dish.subCategory) {
-      if (hasAirFryer) {
-        updates.subCategory = '空气炸锅';
-      } else if (hasRiceCooker) {
-        updates.subCategory = '电饭煲';
-      } else if (hasLowCard) {
-        updates.subCategory = '低卡';
-      } else {
-        const sub = guessSubCategory(currentName);
-        if (sub) {
-          updates.subCategory = sub;
-        }
-      }
-      needsUpdate = true;
-    } else if (hasAirFryer && dish.subCategory !== '空气炸锅') {
-      // 含空气炸锅关键词的优先归为空气炸锅
-      updates.subCategory = '空气炸锅';
+    // 生成多分类数组
+    const newSubCats = [];
+    if (hasAirFryer) newSubCats.push('空气炸锅');
+    if (hasRiceCooker) newSubCats.push('电饭煲');
+    if (hasLowCard) newSubCats.push('低卡');
+
+    // 如果没有特殊分类，用食材类分类
+    if (newSubCats.length === 0) {
+      const sub = guessSubCategory(currentName);
+      if (sub) newSubCats.push(sub);
+    }
+
+    // 更新 subCategories 数组和 subCategory（主分类，取第一个）
+    const currentCats = dish.subCategories || (dish.subCategory ? [dish.subCategory] : []);
+    const needsCatUpdate = newSubCats.length > 0 && (
+      currentCats.length === 0 ||
+      newSubCats.some(c => !currentCats.includes(c)) ||
+      currentCats.length !== newSubCats.length
+    );
+
+    if (needsCatUpdate) {
+      updates.subCategories = newSubCats;
+      updates.subCategory = newSubCats[0]; // 主分类取第一个
       needsUpdate = true;
     }
 
@@ -373,18 +379,31 @@ async function mergeDuplicateDishes() {
 
 // 根据菜品分类/细分类返回对应emoji图标
 function getDishEmoji(dish) {
-  const subCat = dish.subCategory || '';
+  const cats = dish.subCategories || (dish.subCategory ? [dish.subCategory] : []);
   const cat = dish.category || '';
   const name = dish.name || '';
 
-  // 按细分类匹配
-  if (subCat === '低卡' || /低卡|减脂|低脂/.test(name)) return '🥗';
-  if (subCat === '电饭煲' || /电饭煲|电饭锅/.test(name)) return '🍚';
-  if (subCat === '海鲜' || /虾|鱼|蟹|贝|鱿鱼|花螺|蛏/.test(name)) return '🦐';
-  if (subCat === '牛肉' || /牛/.test(name)) return '🥩';
-  if (subCat === '鸡肉' || /鸡/.test(name)) return '🍗';
-  if (subCat === '猪肉' || /猪|排骨|五花|肉沫|肉末|里脊/.test(name)) return '🍖';
-  if (subCat === '一锅出' || /焖|一锅/.test(name)) return '🍲';
+  // 优先按细分类匹配（取第一个匹配的）
+  for (const subCat of cats) {
+    if (subCat === '低卡') return '🥗';
+    if (subCat === '电饭煲') return '🍚';
+    if (subCat === '空气炸锅') return '🌀';
+    if (subCat === '海鲜') return '🦐';
+    if (subCat === '牛肉') return '🥩';
+    if (subCat === '鸡肉') return '🍗';
+    if (subCat === '猪肉') return '🍖';
+    if (subCat === '一锅出') return '🍲';
+  }
+
+  // 按菜名关键词补充判断
+  if (/低卡|减脂|低脂/.test(name)) return '🥗';
+  if (/电饭煲|电饭锅/.test(name)) return '🍚';
+  if (/空气炸锅/.test(name)) return '🌀';
+  if (/虾|鱼|蟹|贝|鱿鱼|花螺|蛏/.test(name)) return '🦐';
+  if (/牛/.test(name)) return '🥩';
+  if (/鸡/.test(name)) return '🍗';
+  if (/猪|排骨|五花|肉沫|肉末|里脊/.test(name)) return '🍖';
+  if (/焖|一锅/.test(name)) return '🍲';
 
   // 按大分类匹配
   if (cat === '汤') return '🍲';
@@ -502,10 +521,12 @@ async function getDishById(id) {
 
 async function addDish(dish) {
   const now = Date.now();
+  const subCats = dish.subCategories || (dish.subCategory ? [dish.subCategory] : []);
   return await db.dishes.add({
     name: dish.name || '',
     category: dish.category || '荤菜',
-    subCategory: dish.subCategory || guessSubCategory(dish.name || ''),
+    subCategory: subCats[0] || guessSubCategory(dish.name || '') || '',
+    subCategories: subCats,
     cooked: dish.cooked || false,
     photo: dish.photo || null,
     douyinUrl: dish.douyinUrl || '',

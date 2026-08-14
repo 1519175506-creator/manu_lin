@@ -556,7 +556,7 @@ const WishlistView = {
             <div class="wishlist-item">
               <div class="wishlist-item-info">
                 <div class="wishlist-item-name">🍳 ${App.escapeHtml(dish.name)}</div>
-                <div class="wishlist-item-date">📅 ${dateStr} 加入 · ${App.escapeHtml(dish.category)}${dish.subCategory ? ' · ' + dish.subCategory : ''}</div>
+                <div class="wishlist-item-date">📅 ${dateStr} 加入 · ${App.escapeHtml(dish.category)}${(dish.subCategories || (dish.subCategory ? [dish.subCategory] : [])).length > 0 ? ' · ' + (dish.subCategories || [dish.subCategory]).join('·') : ''}</div>
                 ${item.note ? `<div style="font-size:13px;color:#666;margin-top:4px">📝 ${App.escapeHtml(item.note)}</div>` : ''}
               </div>
               <div class="wishlist-item-actions">
